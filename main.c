@@ -9,21 +9,22 @@
 #include <dirent.h>
 #include <linux/input.h>
 
-#define SCREEN_WIDTH   640
-#define SCREEN_HEIGHT  480
+// Bok
 
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
 
-volatile uint32_t *r0; //registers
-volatile uint16_t *b0; //bitmap
- 
-volatile uint16_t *t0_map; //Tile Map 0
-volatile uint8_t *t0_data; //Tile Data 0
+volatile uint32_t *r0; // registers
+volatile uint16_t *b0; // bitmap
 
-volatile uint16_t *t1_map; //Tile Map 1
-volatile uint8_t *t1_data; //TIle Date 1
+volatile uint16_t *t0_map; // Tile Map 0
+volatile uint8_t *t0_data; // Tile Data 0
 
-volatile uint64_t *s0_att; //Sprite attributes
-volatile uint8_t *s0_data; //Sprite data
+volatile uint16_t *t1_map; // Tile Map 1
+volatile uint8_t *t1_data; // TIle Date 1
+
+volatile uint64_t *s0_att; // Sprite attributes
+volatile uint8_t *s0_data; // Sprite data
 
 size_t b0_size;
 size_t r0_size;
@@ -34,8 +35,8 @@ size_t t1_data_size;
 size_t s0_att_size;
 size_t s0_data_size;
 
-
-typedef struct {
+typedef struct
+{
     uint16_t key;
     int value;
 } keyboard_event_t;
@@ -46,12 +47,14 @@ static int find_uio(const char *wanted_name)
     struct dirent *ent;
 
     dir = opendir("/sys/class/uio");
-    if (!dir) {
+    if (!dir)
+    {
         perror("/sys/class/uio");
         return -1;
     }
 
-    while ((ent = readdir(dir)) != NULL) {
+    while ((ent = readdir(dir)) != NULL)
+    {
 
         int number;
         char path[128];
@@ -80,14 +83,16 @@ static int find_uio(const char *wanted_name)
         if (!f)
             continue;
 
-        if (fgets(name, sizeof(name), f)) {
+        if (fgets(name, sizeof(name), f))
+        {
 
             /*
              * Remove newline.
              */
             name[strcspn(name, "\r\n")] = '\0';
 
-            if (strcmp(name, wanted_name) == 0) {
+            if (strcmp(name, wanted_name) == 0)
+            {
                 fclose(f);
                 closedir(dir);
 
@@ -103,14 +108,14 @@ static int find_uio(const char *wanted_name)
     return -1;
 }
 
-
 static int find_uio_map(int uio,
                         const char *wanted_name)
 {
     char path[256];
     char name[128];
 
-    for (int map = 0; map < 32; map++) {
+    for (int map = 0; map < 32; map++)
+    {
 
         snprintf(path, sizeof(path),
                  "/sys/class/uio/uio%d/maps/map%d/name",
@@ -121,11 +126,13 @@ static int find_uio_map(int uio,
         if (!f)
             continue;
 
-        if (fgets(name, sizeof(name), f)) {
+        if (fgets(name, sizeof(name), f))
+        {
 
             name[strcspn(name, "\r\n")] = 0;
 
-            if (strcmp(name, wanted_name) == 0) {
+            if (strcmp(name, wanted_name) == 0)
+            {
                 fclose(f);
                 return map;
             }
@@ -136,7 +143,6 @@ static int find_uio_map(int uio,
 
     return -1;
 }
-
 
 static void *map_uio(int fd,
                      int uio,
@@ -151,7 +157,8 @@ static void *map_uio(int fd,
 
     map = find_uio_map(uio, name);
 
-    if (map < 0) {
+    if (map < 0)
+    {
         fprintf(stderr,
                 "ERROR: UIO map '%s' not found\n",
                 name);
@@ -164,12 +171,14 @@ static void *map_uio(int fd,
 
     FILE *f = fopen(path, "r");
 
-    if (!f) {
+    if (!f)
+    {
         perror(path);
         return MAP_FAILED;
     }
 
-    if (fscanf(f, "%lx", &size) != 1) {
+    if (fscanf(f, "%lx", &size) != 1)
+    {
         fclose(f);
         fprintf(stderr,
                 "ERROR: cannot read size of map '%s'\n",
@@ -188,7 +197,8 @@ static void *map_uio(int fd,
                fd,
                map * page_size);
 
-    if (ptr == MAP_FAILED) {
+    if (ptr == MAP_FAILED)
+    {
         perror("mmap");
         return MAP_FAILED;
     }
@@ -202,7 +212,6 @@ static void *map_uio(int fd,
     return ptr;
 }
 
-
 int vdp_init(void)
 {
     char dev0[64];
@@ -214,22 +223,20 @@ int vdp_init(void)
     int fd0 = -1;
     int fd1 = -1;
 
-
     /*
      * Start with all mappings invalid.
      */
-    r0      = MAP_FAILED;
-    b0      = MAP_FAILED;
+    r0 = MAP_FAILED;
+    b0 = MAP_FAILED;
 
-    t0_map  = MAP_FAILED;
+    t0_map = MAP_FAILED;
     t0_data = MAP_FAILED;
 
-    t1_map  = MAP_FAILED;
+    t1_map = MAP_FAILED;
     t1_data = MAP_FAILED;
 
-    s0_att  = MAP_FAILED;
+    s0_att = MAP_FAILED;
     s0_data = MAP_FAILED;
-
 
     /*
      * ------------------------------------------------------------
@@ -239,21 +246,21 @@ int vdp_init(void)
 
     uio0 = find_uio("vdp0");
 
-    if (uio0 < 0) {
+    if (uio0 < 0)
+    {
         fprintf(stderr,
                 "ERROR: UIO device 'vdp0' not found\n");
         goto error;
     }
 
-
     uio1 = find_uio("vdp1");
 
-    if (uio1 < 0) {
+    if (uio1 < 0)
+    {
         fprintf(stderr,
                 "ERROR: UIO device 'vdp1' not found\n");
         goto error;
     }
-
 
     snprintf(dev0, sizeof(dev0),
              "/dev/uio%d", uio0);
@@ -261,10 +268,8 @@ int vdp_init(void)
     snprintf(dev1, sizeof(dev1),
              "/dev/uio%d", uio1);
 
-
     printf("VDP0 found: %s\n", dev0);
     printf("VDP1 found: %s\n", dev1);
-
 
     /*
      * ------------------------------------------------------------
@@ -274,19 +279,19 @@ int vdp_init(void)
 
     fd0 = open(dev0, O_RDWR);
 
-    if (fd0 < 0) {
+    if (fd0 < 0)
+    {
         perror(dev0);
         goto error;
     }
 
-
     fd1 = open(dev1, O_RDWR);
 
-    if (fd1 < 0) {
+    if (fd1 < 0)
+    {
         perror(dev1);
         goto error;
     }
-
 
     /*
      * ============================================================
@@ -300,7 +305,6 @@ int vdp_init(void)
      * map4 = s0_data
      */
 
-
     /*
      * R0
      */
@@ -310,7 +314,6 @@ int vdp_init(void)
 
     if (r0 == MAP_FAILED)
         goto error;
-
 
     /*
      * B0
@@ -322,7 +325,6 @@ int vdp_init(void)
     if (b0 == MAP_FAILED)
         goto error;
 
-
     /*
      * T0 data
      */
@@ -332,7 +334,6 @@ int vdp_init(void)
 
     if (t0_data == MAP_FAILED)
         goto error;
-
 
     /*
      * T0 map
@@ -344,7 +345,6 @@ int vdp_init(void)
     if (t0_map == MAP_FAILED)
         goto error;
 
-
     /*
      * S0 data
      */
@@ -354,8 +354,6 @@ int vdp_init(void)
 
     if (s0_data == MAP_FAILED)
         goto error;
-
-
 
     /*
      * ============================================================
@@ -367,7 +365,6 @@ int vdp_init(void)
      * map2 = t1_map
      */
 
-
     /*
      * S0 attributes
      */
@@ -377,7 +374,6 @@ int vdp_init(void)
 
     if (s0_att == MAP_FAILED)
         goto error;
-
 
     /*
      * T1 data
@@ -389,7 +385,6 @@ int vdp_init(void)
     if (t1_data == MAP_FAILED)
         goto error;
 
-
     /*
      * T1 map
      */
@@ -400,7 +395,6 @@ int vdp_init(void)
     if (t1_map == MAP_FAILED)
         goto error;
 
-
     /*
      * mmap mappings remain valid after close().
      */
@@ -409,7 +403,6 @@ int vdp_init(void)
 
     fd0 = -1;
     fd1 = -1;
-
 
     printf("VDP mapped successfully\n");
 
@@ -439,57 +432,62 @@ int vdp_init(void)
 
     return 0;
 
-
 error:
 
     fprintf(stderr,
             "ERROR: failed to initialize VDP\n");
 
-
     /*
      * Unmap anything that succeeded.
      */
 
-    if (s0_att != MAP_FAILED) {
+    if (s0_att != MAP_FAILED)
+    {
         munmap((void *)s0_att, s0_att_size);
         s0_att = MAP_FAILED;
     }
 
-    if (t1_data != MAP_FAILED) {
+    if (t1_data != MAP_FAILED)
+    {
         munmap((void *)t1_data, t1_data_size);
         t1_data = MAP_FAILED;
     }
 
-    if (t1_map != MAP_FAILED) {
+    if (t1_map != MAP_FAILED)
+    {
         munmap((void *)t1_map, t1_map_size);
         t1_map = MAP_FAILED;
     }
 
-    if (s0_data != MAP_FAILED) {
+    if (s0_data != MAP_FAILED)
+    {
         munmap((void *)s0_data, s0_data_size);
         s0_data = MAP_FAILED;
     }
 
-    if (t0_data != MAP_FAILED) {
+    if (t0_data != MAP_FAILED)
+    {
         munmap((void *)t0_data, t0_data_size);
         t0_data = MAP_FAILED;
     }
 
-    if (t0_map != MAP_FAILED) {
+    if (t0_map != MAP_FAILED)
+    {
         munmap((void *)t0_map, t0_map_size);
         t0_map = MAP_FAILED;
     }
 
-    if (b0 != MAP_FAILED) {
+    if (b0 != MAP_FAILED)
+    {
         munmap((void *)b0, b0_size);
         b0 = MAP_FAILED;
     }
 
-    if (r0 != MAP_FAILED) {
+    if (r0 != MAP_FAILED)
+    {
         munmap((void *)r0, r0_size);
         r0 = MAP_FAILED;
     }
-
 
     /*
      * Close only descriptors that were actually opened.
@@ -505,49 +503,56 @@ error:
 
 void vdp_close(void)
 {
-    if (s0_data != MAP_FAILED) {
+    if (s0_data != MAP_FAILED)
+    {
         munmap((void *)s0_data, s0_data_size);
         s0_data = MAP_FAILED;
     }
 
-    if (s0_att != MAP_FAILED) {
+    if (s0_att != MAP_FAILED)
+    {
         munmap((void *)s0_att, s0_att_size);
         s0_att = MAP_FAILED;
     }
 
-    if (t1_data != MAP_FAILED) {
+    if (t1_data != MAP_FAILED)
+    {
         munmap((void *)t1_data, t1_data_size);
         t1_data = MAP_FAILED;
     }
 
-    if (t1_map != MAP_FAILED) {
+    if (t1_map != MAP_FAILED)
+    {
         munmap((void *)t1_map, t1_map_size);
         t1_map = MAP_FAILED;
     }
 
-    if (t0_data != MAP_FAILED) {
+    if (t0_data != MAP_FAILED)
+    {
         munmap((void *)t0_data, t0_data_size);
         t0_data = MAP_FAILED;
     }
 
-    if (t0_map != MAP_FAILED) {
+    if (t0_map != MAP_FAILED)
+    {
         munmap((void *)t0_map, t0_map_size);
         t0_map = MAP_FAILED;
     }
 
-    if (b0 != MAP_FAILED) {
+    if (b0 != MAP_FAILED)
+    {
         munmap((void *)b0, b0_size);
         b0 = MAP_FAILED;
     }
 
-    if (r0 != MAP_FAILED) {
+    if (r0 != MAP_FAILED)
+    {
         munmap((void *)r0, r0_size);
         r0 = MAP_FAILED;
     }
 }
 
 static int keyboard_fd = -1;
-
 
 /*
  * Find Linux input event device by its registered name.
@@ -562,7 +567,8 @@ static int find_keyboard(const char *wanted_name)
     char dev[64];
     char name[256];
 
-    for (int i = 0; i < 32; i++) {
+    for (int i = 0; i < 32; i++)
+    {
 
         snprintf(dev, sizeof(dev),
                  "/dev/input/event%d", i);
@@ -576,9 +582,11 @@ static int find_keyboard(const char *wanted_name)
 
         if (ioctl(fd,
                   EVIOCGNAME(sizeof(name)),
-                  name) >= 0) {
+                  name) >= 0)
+        {
 
-            if (strcmp(name, wanted_name) == 0) {
+            if (strcmp(name, wanted_name) == 0)
+            {
 
                 printf("Keyboard found: %s (%s)\n",
                        dev, name);
@@ -598,7 +606,8 @@ int keyboard_init(void)
     keyboard_fd =
         find_keyboard("ARES MSX Keyboard");
 
-    if (keyboard_fd < 0) {
+    if (keyboard_fd < 0)
+    {
         fprintf(stderr,
                 "ERROR: ARES MSX Keyboard not found\n");
         return -1;
@@ -621,12 +630,14 @@ int keyboard_get_event(keyboard_event_t *event)
     if (keyboard_fd < 0)
         return -1;
 
-    while (1) {
+    while (1)
+    {
 
         ssize_t n =
             read(keyboard_fd, &ev, sizeof(ev));
 
-        if (n < 0) {
+        if (n < 0)
+        {
             /*
              * O_NONBLOCK:
              * no event currently available.
@@ -643,7 +654,7 @@ int keyboard_get_event(keyboard_event_t *event)
         if (ev.type != EV_KEY)
             continue;
 
-        event->key   = ev.code;
+        event->key = ev.code;
         event->value = ev.value;
 
         return 1;
@@ -651,29 +662,30 @@ int keyboard_get_event(keyboard_event_t *event)
 }
 
 int main(void)
-{   
+{
     keyboard_event_t ev;
 
-
-    if(vdp_init() != 0)
+    if (vdp_init() != 0)
     {
         fprintf(stderr,
                 "ERROR: UIO device 'vdp' not found\n");
         return 1;
     }
-    if (keyboard_init() != 0) {
+    if (keyboard_init() != 0)
+    {
         fprintf(stderr,
                 "ERROR: EVENT keyboard not found\n");
         vdp_close();
         return 1;
     }
 
-    while (1) {
+    while (1)
+    {
 
-        if (keyboard_get_event(&ev) == 1) {
+        if (keyboard_get_event(&ev) == 1)
+        {
 
             printf("key=%u  ", ev.key);
-
 
             if (ev.value == 1)
                 printf("DOWN\n");
@@ -684,18 +696,17 @@ int main(void)
             else if (ev.value == 2)
                 printf("REPEAT\n");
 
-
-            if(ev.key == KEY_W)
+            if (ev.key == KEY_W)
             {
-                for(int i = 0; i < SCREEN_WIDTH*SCREEN_HEIGHT; i++)
+                for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++)
                 {
                     b0[i] = 0x0000;
                 }
             }
 
-            if(ev.key == KEY_S)
+            if (ev.key == KEY_S)
             {
-                for(int i = 0; i < SCREEN_WIDTH*SCREEN_HEIGHT; i++)
+                for (int i = 0; i < SCREEN_WIDTH * SCREEN_HEIGHT; i++)
                 {
                     b0[i] = 0xFFFF;
                 }
@@ -703,49 +714,43 @@ int main(void)
 
             uint64_t tmp;
 
-/*
-    wire [9:0]  x_pos    = spr_att_vdp_dout[9:0];   //10 bit
-    wire [9:0]  y_pos    = spr_att_vdp_dout[25:16]; //10 bit
-    wire [10:0] offset   = spr_att_vdp_dout[46:36]; //11 bit
-    wire [1:0]  scale    = spr_att_vdp_dout[54:53]; //2 bit  ne postoji
-    wire        size     = spr_att_vdp_dout[52];    //1 bit
-    wire        v_flip   = spr_att_vdp_dout[51];    //1 bit
-    wire        h_flip   = spr_att_vdp_dout[50];    //1 bit
-    wire [1:0]  pall_num = spr_att_vdp_dout[49:48]; //2 bit
-    wire        active   = spr_att_vdp_dout[63];    //1 bit
+            /*
+                wire [9:0]  x_pos    = spr_att_vdp_dout[9:0];   //10 bit
+                wire [9:0]  y_pos    = spr_att_vdp_dout[25:16]; //10 bit
+                wire [10:0] offset   = spr_att_vdp_dout[46:36]; //11 bit
+                wire [1:0]  scale    = spr_att_vdp_dout[54:53]; //2 bit  ne postoji
+                wire        size     = spr_att_vdp_dout[52];    //1 bit
+                wire        v_flip   = spr_att_vdp_dout[51];    //1 bit
+                wire        h_flip   = spr_att_vdp_dout[50];    //1 bit
+                wire [1:0]  pall_num = spr_att_vdp_dout[49:48]; //2 bit
+                wire        active   = spr_att_vdp_dout[63];    //1 bit
 
-    s0_att
+                s0_att
 
-    s0_data
+                s0_data
 
-    uint64_t;
-
-
+                uint64_t;
 
 
-*/
-            if(ev.key == KEY_D)
+
+
+            */
+            if (ev.key == KEY_D)
             {
-                
+
                 s0_att[0] += 1;
-
-
             }
 
-            if(ev.key == KEY_A)
+            if (ev.key == KEY_A)
             {
-                
+
                 s0_att[0] -= 1;
-
-
             }
         }
 
         /*
          * Do other VDP/game work here.
          */
-
-        
     }
 
     return 0;
