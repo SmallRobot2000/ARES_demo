@@ -1,11 +1,12 @@
 #define _GNU_SOURCE
 #define _POSIX_C_SOURCE 200809L
 
-#include "vdp_sim.h"
+#include <vdp.h>
+#include <kbd_sim_internal.h>
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-
+#include <X11/XKBlib.h>
 #include <errno.h>
 #include <pthread.h>
 #include <signal.h>
@@ -22,69 +23,69 @@
  * Memory sizes: match the Verilog/BRAM layout.
  * ================================================================ */
 
-#define R0_SIZE       0x00002000u  /* Verilog R0 MEM_SIZE = 8192 bytes */
-#define B0_SIZE       0x00800000u
-#define T0_MAP_SIZE   0x00008000u
-#define T0_DATA_SIZE  0x00010000u
-#define T1_MAP_SIZE   0x00008000u
-#define T1_DATA_SIZE  0x00010000u
-#define S0_ATT_SIZE   0x00000200u
-#define S0_DATA_SIZE  0x00008000u
+#define R0_SIZE 0x00002000u /* Verilog R0 MEM_SIZE = 8192 bytes */
+#define B0_SIZE 0x00800000u
+#define T0_MAP_SIZE 0x00008000u
+#define T0_DATA_SIZE 0x00010000u
+#define T1_MAP_SIZE 0x00008000u
+#define T1_DATA_SIZE 0x00010000u
+#define S0_ATT_SIZE 0x00000200u
+#define S0_DATA_SIZE 0x00008000u
 
-#define SCREEN_WIDTH   640
-#define SCREEN_HEIGHT  480
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
 
-#define TILE_MAP_WIDTH   128
-#define TILE_MAP_HEIGHT  128
-#define TILE_WIDTH         8
-#define TILE_HEIGHT        8
-#define TILE_COUNT      1024
+#define TILE_MAP_WIDTH 128
+#define TILE_MAP_HEIGHT 128
+#define TILE_WIDTH 8
+#define TILE_HEIGHT 8
+#define TILE_COUNT 1024
 
-#define SPRITE_COUNT       64
-#define MAX_SPR_LINE       32
-#define SPR_DATA_WORDS   2048 /* 128-bit words, 16 bytes each */
+#define SPRITE_COUNT 64
+#define MAX_SPR_LINE 32
+#define SPR_DATA_WORDS 2048 /* 128-bit words, 16 bytes each */
 
 /* ================================================================
  * R0 word addresses from REG_MEMORY.
  * r0 is uint32_t*, therefore these are 32-bit word indices.
  * ================================================================ */
 
-#define REG_CTRL_0       0x000u
-#define REG_STAT_0       0x001u
-#define REG_LINE         0x002u
-#define REG_BCK_GND      0x003u
-#define REG_T0_X_OFF     0x004u
-#define REG_T0_Y_OFF     0x005u
-#define REG_T1_X_OFF     0x008u
-#define REG_T1_Y_OFF     0x009u
-#define REG_B0_X_OFF     0x00Cu
-#define REG_B0_Y_OFF     0x00Du
+#define REG_CTRL_0 0x000u
+#define REG_STAT_0 0x001u
+#define REG_LINE 0x002u
+#define REG_BCK_GND 0x003u
+#define REG_T0_X_OFF 0x004u
+#define REG_T0_Y_OFF 0x005u
+#define REG_T1_X_OFF 0x008u
+#define REG_T1_Y_OFF 0x009u
+#define REG_B0_X_OFF 0x00Cu
+#define REG_B0_Y_OFF 0x00Du
 
-#define PAL_T0_ADDR      0x100u
-#define PAL_T1_ADDR      0x200u
-#define PAL_S0_ADDR      0x300u
+#define PAL_T0_ADDR 0x100u
+#define PAL_T1_ADDR 0x200u
+#define PAL_S0_ADDR 0x300u
 
-#define BIT_STAT_H_BLANK       0
-#define BIT_STAT_V_BLANK       1
+#define BIT_STAT_H_BLANK 0
+#define BIT_STAT_V_BLANK 1
 
-#define BIT_CTRL_T0_EN         0
-#define BIT_CTRL_T1_EN         1
-#define BIT_CTRL_S0_EN         2
-#define BIT_CTRL_B0_EN         3
-#define BIT_CTRL_B0_LINUX_CMP  4
+#define BIT_CTRL_T0_EN 0
+#define BIT_CTRL_T1_EN 1
+#define BIT_CTRL_S0_EN 2
+#define BIT_CTRL_B0_EN 3
+#define BIT_CTRL_B0_LINUX_CMP 4
 
 /* ================================================================
  * Public memory pointers.  These are the only symbols main needs.
  * ================================================================ */
 
-volatile uint32_t *r0      = NULL;
-volatile uint16_t *b0      = NULL;
-volatile uint16_t *t0_map  = NULL;
-volatile uint8_t  *t0_data = NULL;
-volatile uint16_t *t1_map  = NULL;
-volatile uint8_t  *t1_data = NULL;
-volatile uint64_t *s0_att  = NULL;
-volatile uint8_t  *s0_data = NULL;
+volatile uint32_t *r0 = NULL;
+volatile uint16_t *b0 = NULL;
+volatile uint16_t *t0_map = NULL;
+volatile uint8_t *t0_data = NULL;
+volatile uint16_t *t1_map = NULL;
+volatile uint8_t *t1_data = NULL;
+volatile uint64_t *s0_att = NULL;
+volatile uint8_t *s0_data = NULL;
 
 /* ================================================================
  * Internal simulator state.
@@ -104,8 +105,7 @@ static const uint16_t basic_palette[16] = {
     0x0000, 0xF000, 0xFFFF, 0xFF00,
     0xF0F0, 0xF00F, 0xFFF0, 0xFF0F,
     0xF0FF, 0xF800, 0xF080, 0xF008,
-    0xF880, 0xF808, 0xF088, 0xF888
-};
+    0xF880, 0xF808, 0xF088, 0xF888};
 
 static void *map_zeroed(size_t size)
 {
@@ -123,7 +123,8 @@ static void *map_zeroed(size_t size)
 
 static void unmap_region(volatile void **p, size_t size)
 {
-    if (*p != NULL) {
+    if (*p != NULL)
+    {
         munmap((void *)*p, size);
         *p = NULL;
     }
@@ -131,14 +132,14 @@ static void unmap_region(volatile void **p, size_t size)
 
 static int allocate_vdp_memory(void)
 {
-    r0      = (volatile uint32_t *)map_zeroed(R0_SIZE);
-    b0      = (volatile uint16_t *)map_zeroed(B0_SIZE);
-    t0_map  = (volatile uint16_t *)map_zeroed(T0_MAP_SIZE);
-    t0_data = (volatile uint8_t  *)map_zeroed(T0_DATA_SIZE);
-    t1_map  = (volatile uint16_t *)map_zeroed(T1_MAP_SIZE);
-    t1_data = (volatile uint8_t  *)map_zeroed(T1_DATA_SIZE);
-    s0_att  = (volatile uint64_t *)map_zeroed(S0_ATT_SIZE);
-    s0_data = (volatile uint8_t  *)map_zeroed(S0_DATA_SIZE);
+    r0 = (volatile uint32_t *)map_zeroed(R0_SIZE);
+    b0 = (volatile uint16_t *)map_zeroed(B0_SIZE);
+    t0_map = (volatile uint16_t *)map_zeroed(T0_MAP_SIZE);
+    t0_data = (volatile uint8_t *)map_zeroed(T0_DATA_SIZE);
+    t1_map = (volatile uint16_t *)map_zeroed(T1_MAP_SIZE);
+    t1_data = (volatile uint8_t *)map_zeroed(T1_DATA_SIZE);
+    s0_att = (volatile uint64_t *)map_zeroed(S0_ATT_SIZE);
+    s0_data = (volatile uint8_t *)map_zeroed(S0_DATA_SIZE);
 
     if (!r0 || !b0 || !t0_map || !t0_data ||
         !t1_map || !t1_data || !s0_att || !s0_data)
@@ -150,13 +151,13 @@ static int allocate_vdp_memory(void)
 static void free_vdp_memory(void)
 {
     unmap_region((volatile void **)&s0_data, S0_DATA_SIZE);
-    unmap_region((volatile void **)&s0_att,  S0_ATT_SIZE);
+    unmap_region((volatile void **)&s0_att, S0_ATT_SIZE);
     unmap_region((volatile void **)&t1_data, T1_DATA_SIZE);
-    unmap_region((volatile void **)&t1_map,  T1_MAP_SIZE);
+    unmap_region((volatile void **)&t1_map, T1_MAP_SIZE);
     unmap_region((volatile void **)&t0_data, T0_DATA_SIZE);
-    unmap_region((volatile void **)&t0_map,  T0_MAP_SIZE);
-    unmap_region((volatile void **)&b0,      B0_SIZE);
-    unmap_region((volatile void **)&r0,      R0_SIZE);
+    unmap_region((volatile void **)&t0_map, T0_MAP_SIZE);
+    unmap_region((volatile void **)&b0, B0_SIZE);
+    unmap_region((volatile void **)&r0, R0_SIZE);
 }
 
 static void initialize_r0_defaults(void)
@@ -166,12 +167,14 @@ static void initialize_r0_defaults(void)
     /* mmap() already gave us zeroed register space. */
 
     /* T0 and T1 palettes: all opaque black first. */
-    for (i = 0; i < 256; ++i) {
+    for (i = 0; i < 256; ++i)
+    {
         r0[PAL_T0_ADDR + i] = 0xF000;
         r0[PAL_T1_ADDR + i] = 0xF000;
     }
 
-    for (i = 0; i < 16; ++i) {
+    for (i = 0; i < 16; ++i)
+    {
         r0[PAL_T0_ADDR + i] = basic_palette[i];
         r0[PAL_T1_ADDR + i] = basic_palette[i];
     }
@@ -241,7 +244,8 @@ static inline uint16_t bitmap_pixel(int x, int y,
     size_t index;
     uint16_t p;
 
-    if (linux_comp) {
+    if (linux_comp)
+    {
         index = (size_t)y * SCREEN_WIDTH + (size_t)x;
         p = b0[index];
         return rgb565_to_argb4444(p);
@@ -266,18 +270,19 @@ static void generate_sprite_line(int y)
 
     memset(sprite_line, 0, sizeof(sprite_line));
 
-    for (att_index = 0; att_index < SPRITE_COUNT; ++att_index) {
+    for (att_index = 0; att_index < SPRITE_COUNT; ++att_index)
+    {
         uint64_t a = s0_att[att_index];
 
-        unsigned x_pos    = (unsigned)((a >>  0) & 0x03FFu);
-        unsigned y_pos    = (unsigned)((a >> 16) & 0x03FFu);
-        unsigned offset   = (unsigned)((a >> 36) & 0x07FFu);
+        unsigned x_pos = (unsigned)((a >> 0) & 0x03FFu);
+        unsigned y_pos = (unsigned)((a >> 16) & 0x03FFu);
+        unsigned offset = (unsigned)((a >> 36) & 0x07FFu);
         unsigned pall_num = (unsigned)((a >> 48) & 0x0003u);
-        unsigned h_flip   = (unsigned)((a >> 50) & 0x0001u);
-        unsigned v_flip   = (unsigned)((a >> 51) & 0x0001u);
-        unsigned size     = (unsigned)((a >> 52) & 0x0001u);
+        unsigned h_flip = (unsigned)((a >> 50) & 0x0001u);
+        unsigned v_flip = (unsigned)((a >> 51) & 0x0001u);
+        unsigned size = (unsigned)((a >> 52) & 0x0001u);
         /* Bits 54:53 (scale) are intentionally unused in the Verilog. */
-        unsigned active   = (unsigned)((a >> 63) & 0x0001u);
+        unsigned active = (unsigned)((a >> 63) & 0x0001u);
 
         unsigned width = size ? 32u : 16u;
         unsigned height = width;
@@ -302,7 +307,8 @@ static void generate_sprite_line(int y)
 
         base_word = offset + (size ? (row << 1) : row);
 
-        for (dx = 0; dx < width; ++dx) {
+        for (dx = 0; dx < width; ++dx)
+        {
             unsigned src_x = h_flip ? (width - 1u - dx) : dx;
             unsigned word_addr = base_word + (src_x >> 4);
             unsigned byte_in_word = src_x & 15u;
@@ -315,12 +321,14 @@ static void generate_sprite_line(int y)
 
             palette_index = s0_data[word_addr * 16u + byte_in_word];
             color = (uint16_t)(r0[PAL_S0_ADDR +
-                                  (pall_num << 8) + palette_index] & 0xFFFFu);
+                                  (pall_num << 8) + palette_index] &
+                               0xFFFFu);
 
             if (!argb4444_visible(color))
                 continue;
 
-            if (screen_x < SCREEN_WIDTH) {
+            if (screen_x < SCREEN_WIDTH)
+            {
                 /* Later attribute entries overwrite earlier ones, matching
                    the sequential sprite line-buffer writes. */
                 sprite_line[screen_x] = color;
@@ -348,7 +356,8 @@ static void render_frame(void)
 
     int y;
 
-    for (y = 0; y < SCREEN_HEIGHT; ++y) {
+    for (y = 0; y < SCREEN_HEIGHT; ++y)
+    {
         int x;
 
         /* Approximate the live line/status registers while rendering. */
@@ -360,7 +369,8 @@ static void render_frame(void)
         else
             memset(sprite_line, 0, sizeof(sprite_line));
 
-        for (x = 0; x < SCREEN_WIDTH; ++x) {
+        for (x = 0; x < SCREEN_WIDTH; ++x)
+        {
             uint16_t c_t1 = 0;
             uint16_t c_s0 = sprite_line[x];
             uint16_t c_t0 = 0;
@@ -409,7 +419,8 @@ static unsigned mask_shift(unsigned long mask)
     if (mask == 0)
         return 0;
 
-    while ((mask & 1ul) == 0) {
+    while ((mask & 1ul) == 0)
+    {
         mask >>= 1;
         ++shift;
     }
@@ -458,21 +469,28 @@ static void copy_frame_to_ximage(XImage *image,
 
     (void)visual;
 
-    if (image->bits_per_pixel == 32 && native_order) {
-        for (y = 0; y < SCREEN_HEIGHT; ++y) {
+    if (image->bits_per_pixel == 32 && native_order)
+    {
+        for (y = 0; y < SCREEN_HEIGHT; ++y)
+        {
             uint32_t *dst = (uint32_t *)(void *)(image->data +
-                                                  y * image->bytes_per_line);
+                                                 y * image->bytes_per_line);
             int x;
-            for (x = 0; x < SCREEN_WIDTH; ++x) {
+            for (x = 0; x < SCREEN_WIDTH; ++x)
+            {
                 uint16_t rgb444 = final_frame[(size_t)y * SCREEN_WIDTH + x];
                 dst[x] = (uint32_t)xcolors[rgb444 & 0x0FFFu];
             }
         }
-    } else {
+    }
+    else
+    {
         /* Portable fallback for unusual X visuals. */
-        for (y = 0; y < SCREEN_HEIGHT; ++y) {
+        for (y = 0; y < SCREEN_HEIGHT; ++y)
+        {
             int x;
-            for (x = 0; x < SCREEN_WIDTH; ++x) {
+            for (x = 0; x < SCREEN_WIDTH; ++x)
+            {
                 uint16_t rgb444 = final_frame[(size_t)y * SCREEN_WIDTH + x];
                 XPutPixel(image, x, y, xcolors[rgb444 & 0x0FFFu]);
             }
@@ -516,12 +534,23 @@ static void *simulator_thread(void *arg)
     (void)arg;
 
     dpy = XOpenDisplay(NULL);
-    if (!dpy) {
+    if (!dpy)
+    {
         fprintf(stderr,
                 "ARES VDP simulator: cannot open X11 display; running headless\n");
         atomic_store(&sim_running, 0);
         return NULL;
     }
+
+    Bool detectable_repeat = False;
+
+    XkbSetDetectableAutoRepeat(
+        dpy,
+        True,
+        &detectable_repeat);
+
+    printf("X11 detectable autorepeat: %s\n",
+           detectable_repeat ? "yes" : "no");
 
     screen = DefaultScreen(dpy);
     visual = DefaultVisual(dpy, screen);
@@ -536,7 +565,7 @@ static void *simulator_thread(void *arg)
                               BlackPixel(dpy, screen));
 
     XStoreName(dpy, win, "ARES VDP Simulator");
-    XSelectInput(dpy, win, ExposureMask | KeyPressMask | StructureNotifyMask);
+    XSelectInput(dpy, win, ExposureMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask);
 
     memset(&hints, 0, sizeof(hints));
     hints.flags = PMinSize | PMaxSize;
@@ -554,7 +583,8 @@ static void *simulator_thread(void *arg)
                          ZPixmap, 0, NULL,
                          SCREEN_WIDTH, SCREEN_HEIGHT,
                          32, 0);
-    if (!image) {
+    if (!image)
+    {
         fprintf(stderr, "ARES VDP simulator: XCreateImage failed\n");
         XFreeGC(dpy, gc);
         XDestroyWindow(dpy, win);
@@ -564,7 +594,8 @@ static void *simulator_thread(void *arg)
     }
 
     image->data = calloc(1, (size_t)image->bytes_per_line * image->height);
-    if (!image->data) {
+    if (!image->data)
+    {
         fprintf(stderr, "ARES VDP simulator: image allocation failed\n");
         XDestroyImage(image);
         XFreeGC(dpy, gc);
@@ -580,39 +611,132 @@ static void *simulator_thread(void *arg)
     /* 25 MHz pixel clock / (800 * 524) = about 59.637 Hz. */
     next_frame = monotonic_ns();
 
-    while (atomic_load(&sim_running)) {
-        while (XPending(dpy)) {
+    while (atomic_load(&sim_running))
+    {
+
+        while (XPending(dpy))
+        {
             XEvent ev;
+
             XNextEvent(dpy, &ev);
 
-            if (ev.type == ClientMessage &&
-                (Atom)ev.xclient.data.l[0] == wm_delete) {
-                /* No public simulator API is exposed to main, so closing the
-                   window terminates the simulator process. */
-                kill(getpid(), SIGTERM);
+            switch (ev.type)
+            {
+
+            case ClientMessage:
+                if ((Atom)ev.xclient.data.l[0] == wm_delete)
+                    kill(getpid(), SIGTERM);
+                break;
+
+            case KeyPress:
+            {
+                KeySym ks;
+
+                ks = XLookupKeysym(&ev.xkey, 0);
+
+                /*
+                 * keyboard_sim_x11_event() knows whether the key
+                 * is already down:
+                 *
+                 * first KeyPress   -> value 1
+                 * repeated press   -> value 2
+                 */
+                keyboard_sim_x11_event(
+                    (unsigned long)ks,
+                    1);
+
+                break;
             }
 
-            if (ev.type == KeyPress) {
-                KeySym ks = XLookupKeysym(&ev.xkey, 0);
-                if (ks == XK_Escape)
-                    kill(getpid(), SIGTERM);
+            case KeyRelease:
+            {
+                XEvent next;
+
+                /*
+                 * ------------------------------------------------
+                 * Detect old-style X11 autorepeat.
+                 *
+                 * Autorepeat is represented as:
+                 *
+                 *   KeyRelease
+                 *   KeyPress
+                 *
+                 * with the SAME keycode and SAME timestamp.
+                 *
+                 * Ignore that fake KeyRelease.  The following
+                 * KeyPress will then be interpreted as repeat.
+                 * ------------------------------------------------
+                 */
+                if (XEventsQueued(dpy, QueuedAfterReading) > 0)
+                {
+
+                    XPeekEvent(dpy, &next);
+
+                    if (next.type == KeyPress &&
+                        next.xkey.keycode == ev.xkey.keycode &&
+                        next.xkey.time == ev.xkey.time)
+                    {
+
+                        /*
+                         * Fake release caused by autorepeat.
+                         *
+                         * Do NOT tell keyboard_sim that the key
+                         * was released.
+                         */
+                        break;
+                    }
+                }
+
+                /*
+                 * Real physical key release.
+                 */
+                KeySym ks;
+
+                ks = XLookupKeysym(&ev.xkey, 0);
+
+                keyboard_sim_x11_event(
+                    (unsigned long)ks,
+                    0);
+
+                break;
+            }
+
+            default:
+                break;
             }
         }
 
+        /*
+         * Render VDP frame.
+         */
         render_frame();
-        copy_frame_to_ximage(image, visual, xcolors);
 
-        XPutImage(dpy, win, gc, image,
-                  0, 0, 0, 0,
-                  SCREEN_WIDTH, SCREEN_HEIGHT);
+        copy_frame_to_ximage(
+            image,
+            visual,
+            xcolors);
+
+        XPutImage(
+            dpy,
+            win,
+            gc,
+            image,
+            0, 0,
+            0, 0,
+            SCREEN_WIDTH,
+            SCREEN_HEIGHT);
+
         XFlush(dpy);
 
-        next_frame += 16768193ull; /* ~59.637 Hz */
+        /*
+         * ~59.637 Hz
+         */
+        next_frame += 16768193ull;
 
-        /* If the process was paused for a long time, don't try to catch up
-           by rendering hundreds of frames immediately. */
-        if (monotonic_ns() > next_frame + 100000000ull)
-            next_frame = monotonic_ns();
+        uint64_t now = monotonic_ns();
+
+        if (now > next_frame + 100000000ull)
+            next_frame = now;
 
         sleep_until_ns(next_frame);
     }
@@ -625,35 +749,34 @@ static void *simulator_thread(void *arg)
     return NULL;
 }
 
-__attribute__((constructor))
-static void vdp_sim_constructor(void)
+int vdp_init(void)
 {
-    if (allocate_vdp_memory() != 0) {
-        fprintf(stderr, "ARES VDP simulator: cannot allocate VDP memories\n");
-        free_vdp_memory();
-        exit(EXIT_FAILURE);
-    }
+    if (allocate_vdp_memory() != 0)
+        return -1;
 
     initialize_r0_defaults();
 
     atomic_store(&sim_running, 1);
 
-    if (pthread_create(&sim_thread, NULL, simulator_thread, NULL) != 0) {
-        fprintf(stderr, "ARES VDP simulator: cannot create render thread\n");
+    if (pthread_create(&sim_thread, NULL,
+                       simulator_thread, NULL) != 0)
+    {
         atomic_store(&sim_running, 0);
         free_vdp_memory();
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     sim_thread_created = 1;
+
+    return 0;
 }
 
-__attribute__((destructor))
-static void vdp_sim_destructor(void)
+void vdp_close(void)
 {
     atomic_store(&sim_running, 0);
 
-    if (sim_thread_created) {
+    if (sim_thread_created)
+    {
         pthread_join(sim_thread, NULL);
         sim_thread_created = 0;
     }
