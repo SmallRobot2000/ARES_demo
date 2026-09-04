@@ -17,6 +17,7 @@ INC_DIR     := include
 BUILD_DIR   := build
 
 COMMON_DIR  := $(SRC_DIR)/common
+CPP_DIR     := $(SRC_DIR)/cpp
 HW_DIR      := $(SRC_DIR)/hw
 SIM_DIR     := $(SRC_DIR)/sim
 
@@ -30,8 +31,11 @@ SIM_BUILD_DIR := $(BUILD_DIR)/sim
 
 PREFIX := /home/lovro/ARES/buildroot/output/host/bin/riscv32-buildroot-linux-gnu-
 
-HW_CC  := $(PREFIX)gcc
-SIM_CC := gcc
+HW_CC   := $(PREFIX)gcc
+HW_CXX  := $(PREFIX)g++
+
+SIM_CC  := gcc
+SIM_CXX := g++
 
 
 # ------------------------------------------------------------
@@ -48,7 +52,7 @@ SIM_CPPFLAGS := \
 
 
 # ------------------------------------------------------------
-# Compiler flags
+# C compiler flags
 # ------------------------------------------------------------
 
 HW_CFLAGS := \
@@ -66,11 +70,36 @@ SIM_CFLAGS := \
 	-Wextra \
 	-std=c11 \
 	-MMD \
-	-MP
+	-MP \
+	-pthread
 
 
 # ------------------------------------------------------------
-# Simulator libraries
+# C++ compiler flags
+# ------------------------------------------------------------
+
+HW_CXXFLAGS := \
+	-O2 \
+	-Wall \
+	-Wextra \
+	-std=c++17 \
+	-MMD \
+	-MP \
+	-march=rv32imafdc_zicsr_zifencei_zicbom \
+	-mabi=ilp32d
+
+SIM_CXXFLAGS := \
+	-O2 \
+	-Wall \
+	-Wextra \
+	-std=c++17 \
+	-MMD \
+	-MP \
+	-pthread
+
+
+# ------------------------------------------------------------
+# Libraries
 # ------------------------------------------------------------
 
 SIM_LDLIBS := \
@@ -84,16 +113,29 @@ SIM_LDLIBS := \
 
 MAIN_SOURCE := $(SRC_DIR)/main.c
 
-COMMON_SOURCES := $(shell find $(COMMON_DIR) -type f -name '*.c' 2>/dev/null)
-HW_SOURCES     := $(shell find $(HW_DIR)     -type f -name '*.c' 2>/dev/null)
-SIM_SOURCES    := $(shell find $(SIM_DIR)    -type f -name '*.c' 2>/dev/null)
+COMMON_SOURCES := \
+	$(shell find $(COMMON_DIR) -type f -name '*.c' 2>/dev/null)
 
-HW_ALL_SOURCES := \
+HW_SOURCES := \
+	$(shell find $(HW_DIR) -type f -name '*.c' 2>/dev/null)
+
+SIM_SOURCES := \
+	$(shell find $(SIM_DIR) -type f -name '*.c' 2>/dev/null)
+
+CPP_SOURCES := \
+	$(shell find $(CPP_DIR) -type f -name '*.cpp' 2>/dev/null)
+
+
+# ------------------------------------------------------------
+# C source lists
+# ------------------------------------------------------------
+
+HW_C_SOURCES := \
 	$(MAIN_SOURCE) \
 	$(COMMON_SOURCES) \
 	$(HW_SOURCES)
 
-SIM_ALL_SOURCES := \
+SIM_C_SOURCES := \
 	$(MAIN_SOURCE) \
 	$(COMMON_SOURCES) \
 	$(SIM_SOURCES)
@@ -101,28 +143,35 @@ SIM_ALL_SOURCES := \
 
 # ------------------------------------------------------------
 # Object files
-#
-# src/common/game.c
-#       ->
-# build/hw/common/game.o
-#
-# and
-#
-# build/sim/common/game.o
 # ------------------------------------------------------------
 
+HW_C_OBJECTS := \
+	$(patsubst $(SRC_DIR)/%.c,$(HW_BUILD_DIR)/%.o,$(HW_C_SOURCES))
+
+HW_CPP_OBJECTS := \
+	$(patsubst $(SRC_DIR)/%.cpp,$(HW_BUILD_DIR)/%.o,$(CPP_SOURCES))
+
+SIM_C_OBJECTS := \
+	$(patsubst $(SRC_DIR)/%.c,$(SIM_BUILD_DIR)/%.o,$(SIM_C_SOURCES))
+
+SIM_CPP_OBJECTS := \
+	$(patsubst $(SRC_DIR)/%.cpp,$(SIM_BUILD_DIR)/%.o,$(CPP_SOURCES))
+
+
 HW_OBJECTS := \
-	$(patsubst $(SRC_DIR)/%.c,$(HW_BUILD_DIR)/%.o,$(HW_ALL_SOURCES))
+	$(HW_C_OBJECTS) \
+	$(HW_CPP_OBJECTS)
 
 SIM_OBJECTS := \
-	$(patsubst $(SRC_DIR)/%.c,$(SIM_BUILD_DIR)/%.o,$(SIM_ALL_SOURCES))
+	$(SIM_C_OBJECTS) \
+	$(SIM_CPP_OBJECTS)
 
 
 # ------------------------------------------------------------
 # Automatic dependency files
 # ------------------------------------------------------------
 
-HW_DEPS  := $(HW_OBJECTS:.o=.d)
+HW_DEPS := $(HW_OBJECTS:.o=.d)
 SIM_DEPS := $(SIM_OBJECTS:.o=.d)
 
 
@@ -149,36 +198,73 @@ sim: $(SIM_TARGET)
 
 # ------------------------------------------------------------
 # Hardware link
+#
+# Link with g++ because the program contains C++ objects.
 # ------------------------------------------------------------
 
 $(HW_TARGET): $(HW_OBJECTS)
-	$(HW_CC) $(HW_CFLAGS) $^ -o $@
+	$(HW_CXX) \
+		-march=rv32imafdc_zicsr_zifencei_zicbom \
+		-mabi=ilp32d \
+		$^ \
+		-o $@
 
 
 # ------------------------------------------------------------
 # Simulator link
+#
+# Link with g++ because the program contains C++ objects.
 # ------------------------------------------------------------
 
 $(SIM_TARGET): $(SIM_OBJECTS)
-	$(SIM_CC) $(SIM_CFLAGS) $^ -o $@ $(SIM_LDLIBS)
+	$(SIM_CXX) \
+		$^ \
+		-o $@ \
+		$(SIM_LDLIBS)
 
 
 # ------------------------------------------------------------
-# Hardware compile rule
+# Hardware C compile rule
 # ------------------------------------------------------------
 
 $(HW_BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(HW_CC) $(HW_CPPFLAGS) $(HW_CFLAGS) -c $< -o $@
+	$(HW_CC) $(HW_CPPFLAGS) $(HW_CFLAGS) \
+		-c $< \
+		-o $@
 
 
 # ------------------------------------------------------------
-# Simulator compile rule
+# Hardware C++ compile rule
+# ------------------------------------------------------------
+
+$(HW_BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(HW_CXX) $(HW_CPPFLAGS) $(HW_CXXFLAGS) \
+		-c $< \
+		-o $@
+
+
+# ------------------------------------------------------------
+# Simulator C compile rule
 # ------------------------------------------------------------
 
 $(SIM_BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(SIM_CC) $(SIM_CPPFLAGS) $(SIM_CFLAGS) -c $< -o $@
+	$(SIM_CC) $(SIM_CPPFLAGS) $(SIM_CFLAGS) \
+		-c $< \
+		-o $@
+
+
+# ------------------------------------------------------------
+# Simulator C++ compile rule
+# ------------------------------------------------------------
+
+$(SIM_BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(SIM_CXX) $(SIM_CPPFLAGS) $(SIM_CXXFLAGS) \
+		-c $< \
+		-o $@
 
 
 # ------------------------------------------------------------
