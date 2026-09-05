@@ -1,0 +1,24 @@
+{
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+    },
+    "last.imagePath": "/home/lovro/ARES/ARES_demo/assets",
+    "map.height": 128,
+    "map.tileHeight": 8,
+    "map.tileWidth": 8,
+    "map.width": 128,
+    "openFiles": [
+    ],
+    "project": "tiles.tiled-project",
+    "recentFiles": [
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 8,
+        "width": 8
+    },
+    "tileset.useTransparentColor": true
+}

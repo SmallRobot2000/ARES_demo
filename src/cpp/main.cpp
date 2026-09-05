@@ -130,7 +130,67 @@ void start()
 
     vdp_s0_write_sprite_attribute(spr, 0);
 
-    vdp_s0_load_sprite_data(sprite32_smile, 32 * 32, 0);
+    while (!vdp_is_v_blank())
+        ;
+    while (vdp_is_v_blank())
+        ;
+    // Start of frame
+    int cnt = 0;
+    while (!vdp_is_v_blank())
+    {
+        vdp_s0_load_sprite_data(sprite32_smile, 32 * 32, 0);
+        cnt++;
+    }
+    printf("32x32 data sends in one frame: %d \n", cnt);
+
+    /*
+     * Test floating-point performance.
+     *
+     * Keep the operations dependent on the previous result so the compiler
+     * cannot trivially calculate the final result in advance.
+     */
+    cnt = 0;
+
+    float f = 1.234567f;
+    volatile float fp_result;
+
+    while (vdp_is_v_blank())
+        ;
+    while (!vdp_is_v_blank())
+    {
+        f = f * 1.000001f + 0.000001f;
+        f = f / 1.0000001f;
+
+        cnt++;
+    }
+
+    /*
+     * Make the result observable so the compiler cannot remove the loop.
+     */
+    fp_result = f;
+
+    printf("Floating-point loops in one frame: %u\n", cnt);
+    printf("Floating-point result: %f\n", (double)fp_result);
+
+    while (vdp_is_v_blank())
+        ;
+    /*
+     * Integer benchmark.
+     */
+    cnt = 0;
+
+    uint32_t ia = 0x12345678u;
+    uint32_t ib = 0x87654321u;
+
+    while (!vdp_is_v_blank())
+    {
+        ia = ia * 1664525u + ib;
+        ib = ib / 1103515245u;
+
+        cnt++;
+    }
+
+    printf("Integer mul/add loops in one frame: %u\n", cnt);
 }
 
 void loop()
