@@ -128,13 +128,13 @@ void vdp_s0_load_palette(const uint16_t *pal_data, size_t count, uint8_t pal_num
  * by the corresponding sprite attribute.
  *
  * @param spr_data Pointer to the source 8-bit sprite palette-index data.
- * @param count    Number of sprite-data bytes to copy.
+ * @param size    Number of sprite-data bytes to copy.
  * @param offset   Destination byte offset within S0 sprite-data memory.
  */
-void vdp_s0_load_sprite_data(const uint8_t *spr_data, size_t count, uint32_t offset)
+void vdp_s0_load_sprite_data(const uint8_t *spr_data, size_t size, uint32_t offset)
 {
     volatile uint8_t *dst = &s0_data[offset];
-    for (size_t i = 0; i < count; i++)
+    for (size_t i = 0; i < size; i++)
         dst[i] = spr_data[i];
 }
 

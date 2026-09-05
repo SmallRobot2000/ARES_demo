@@ -104,7 +104,7 @@ extern "C"
     void vdp_t1_load_palette(const uint16_t *pal_data, size_t count);
     void vdp_s0_load_palette_at(const uint16_t *pal_data, size_t count, uint8_t pal_num, uint32_t offset);
     void vdp_s0_load_palette(const uint16_t *pal_data, size_t count, uint8_t pal_num);
-    void vdp_s0_load_sprite_data(const uint8_t *spr_data, size_t count, uint32_t offset);
+    void vdp_s0_load_sprite_data(const uint8_t *spr_data, size_t size, uint32_t offset);
     void vdp_s0_write_sprite_attribute(sprite_attribute_t spr_att, uint16_t spr_num);
 #ifdef __cplusplus
 }
