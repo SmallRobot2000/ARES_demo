@@ -195,7 +195,7 @@ void start()
 
 void loop()
 {
-    vdp_t0_
+    
     if (keyboard_get_event(&ev) == 1)
     {
         if (ev.key == KEY_D)

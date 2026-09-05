@@ -1,0 +1,42 @@
+1. Menuc screen (animated):
+B0: stars
+T0: stars moving
+S0: asteroids
+T1: menu and name
+
+Menu:
+1. <Name_placeholder>
+2. Continue (if save file exists)
+3. New game
+4. Quit
+
+New game:
+0. Wait for asteroids to go off screen
+
+1. Scene_0:
+    T1: Menu slides up
+    time ...
+    S0: Spaceship shows
+    time ...
+    S0: Spaceship boom in atmosfere and parts falling to mars
+    B0: still stars moves up from menu
+    T0: starts and mars paralax also moves up (slower)
+    time ..?
+    T1: X off na 640 where white screen as a crash - delayd from anim crash
+    
+    time... (free to load off screen)
+    B0: still stars
+    T0: ground X off 640 or loaded
+    T1_PALL manipulation to fade to black, when black wait and disable T1
+    time ...
+    animations on S0 for crash exit?
+    T0,T1,B0 same
+    time ... (load game)
+    start lvl 0
+
+
+
+
+
+
+    
