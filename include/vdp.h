@@ -14,12 +14,20 @@ extern "C"
 #define VDP_CTRL_REG 0x00
 #define VDP_STAT_REG 0x01
 #define VDP_LINE_REG 0x02
+#define VDP_BG_REG   0x03
 
 #define VDP_T0_X_OFF_REG 0x04
 #define VDP_T0_Y_OFF_REG 0x05
 
 #define VDP_T1_X_OFF_REG 0x08
 #define VDP_T1_Y_OFF_REG 0x09
+
+#define VDP_B0_X_OFF_REG 0x0C
+#define VDP_B0_Y_OFF_REG 0x0D
+
+#define VDP_PAL_T0_REG 0x100u
+#define VDP_PAL_T1_REG 0x200u
+#define VDP_PAL_S0_REG 0x300u
 
 #define VDP_BIT_CTRL_T0_EN 0x00
 #define VDP_BIT_CTRL_T1_EN 0x01

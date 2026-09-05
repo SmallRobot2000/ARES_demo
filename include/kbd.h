@@ -14,38 +14,48 @@
 #include <sys/ioctl.h>
 #include <dirent.h>
 #include <linux/input.h>
-typedef struct
+
+#ifdef __cplusplus
+extern "C"
 {
-    uint16_t key;
+#endif
+
+    typedef struct
+    {
+        uint16_t key;
+
+        /*
+         * Linux EV_KEY values:
+         *
+         * 0 = released
+         * 1 = pressed
+         * 2 = autorepeat
+         */
+        int value;
+
+    } keyboard_event_t;
 
     /*
-     * Linux EV_KEY values:
+     * Initialize keyboard interface.
      *
-     * 0 = released
-     * 1 = pressed
-     * 2 = autorepeat
+     * Returns:
+     *   0  success
+     *  -1  error
      */
-    int value;
+    int keyboard_init(void);
 
-} keyboard_event_t;
+    /*
+     * Non-blocking keyboard event read.
+     *
+     * Returns:
+     *   1  event returned
+     *   0  no event available
+     *  -1  error
+     */
+    int keyboard_get_event(keyboard_event_t *event);
 
-/*
- * Initialize keyboard interface.
- *
- * Returns:
- *   0  success
- *  -1  error
- */
-int keyboard_init(void);
-
-/*
- * Non-blocking keyboard event read.
- *
- * Returns:
- *   1  event returned
- *   0  no event available
- *  -1  error
- */
-int keyboard_get_event(keyboard_event_t *event);
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -281,58 +281,124 @@ static void generate_sprite_line(int y)
         unsigned h_flip = (unsigned)((a >> 50) & 0x0001u);
         unsigned v_flip = (unsigned)((a >> 51) & 0x0001u);
         unsigned size = (unsigned)((a >> 52) & 0x0001u);
-        /* Bits 54:53 (scale) are intentionally unused in the Verilog. */
+        unsigned scale = (unsigned)((a >> 53) & 0x0003u);
         unsigned active = (unsigned)((a >> 63) & 0x0001u);
 
+        /*
+         * Source sprite dimensions are always 16x16 or 32x32.
+         * scale is nearest-neighbour enlargement:
+         *
+         *     0 = 1x
+         *     1 = 2x
+         *     2 = 4x
+         *     3 = 8x
+         */
         unsigned width = size ? 32u : 16u;
         unsigned height = width;
+        unsigned scaled_width = width << scale;
+        unsigned scaled_height = height << scale;
+
+        unsigned scaled_row;
         unsigned row;
-        unsigned dx;
         unsigned base_word;
+        unsigned dx;
 
         if (!active)
             continue;
 
-        if ((unsigned)y < y_pos || (unsigned)y >= y_pos + height)
+        /*
+         * X/Y are 10-bit coordinates.  Modular subtraction makes values
+         * near 1024 behave as negative positions for clipping:
+         *
+         *     1023 = -1
+         *     1022 = -2
+         *     ...
+         *
+         * This lets a sprite enter gradually from the left/top without
+         * wrapping pixels around the physical 640x480 screen.
+         */
+        scaled_row = ((unsigned)y - y_pos) & 0x03FFu;
+
+        if (scaled_row >= scaled_height)
             continue;
 
-        /* Hardware stops after 32 active/intersecting sprites on a line. */
+        /*
+         * Match the hardware horizontal visibility test.  Coordinates
+         * between the right screen edge and the negative-coordinate region
+         * are completely off-screen and do not consume a sprite slot.
+         */
+        {
+            unsigned left_clip = (0u - x_pos) & 0x03FFu;
+            int x_visible =
+                (x_pos < SCREEN_WIDTH) ||
+                ((x_pos != 0u) && (left_clip < scaled_width));
+
+            if (!x_visible)
+                continue;
+        }
+
+        /* Hardware stops after 32 rendered/intersecting sprites per line. */
         if (sprites_on_line >= MAX_SPR_LINE)
             break;
         ++sprites_on_line;
 
-        row = (unsigned)y - y_pos;
+        /* Convert displayed/scaled Y back to the source sprite row. */
+        row = scaled_row >> scale;
+
         if (v_flip)
             row = height - 1u - row;
 
+        /*
+         * offset is an 11-bit address in 128-bit / 16-byte sprite-data
+         * words, exactly as in the FPGA sprite generator.
+         *
+         * 16x16: one 16-byte word per source row.
+         * 32x32: two 16-byte words per source row.
+         */
         base_word = offset + (size ? (row << 1) : row);
 
-        for (dx = 0; dx < width; ++dx)
+        /*
+         * Iterate over DISPLAYED pixels.  Scaling repeats each source pixel
+         * 1, 2, 4 or 8 times.  The 10-bit screen coordinate is formed
+         * modulo 1024 only to implement the negative-coordinate convention;
+         * pixels outside the real 0..639 screen are discarded, so there is
+         * no visual wrap from the right edge to the left edge.
+         */
+        for (dx = 0; dx < scaled_width; ++dx)
         {
-            unsigned src_x = h_flip ? (width - 1u - dx) : dx;
-            unsigned word_addr = base_word + (src_x >> 4);
-            unsigned byte_in_word = src_x & 15u;
+            unsigned screen_x = (x_pos + dx) & 0x03FFu;
+            unsigned src_x = dx >> scale;
+            unsigned word_addr;
+            unsigned byte_in_word;
             uint8_t palette_index;
             uint16_t color;
-            unsigned screen_x = x_pos + dx;
 
-            /* spr_data_vdp_addr is 11 bits. */
+            if (screen_x >= SCREEN_WIDTH)
+                continue;
+
+            if (h_flip)
+                src_x = width - 1u - src_x;
+
+            word_addr = base_word + (src_x >> 4);
+            byte_in_word = src_x & 15u;
+
+            /* spr_data_vdp_addr is 11 bits, so address arithmetic wraps
+               inside the 2048-word sprite-data memory exactly like HDL. */
             word_addr &= (SPR_DATA_WORDS - 1u);
 
             palette_index = s0_data[word_addr * 16u + byte_in_word];
+
             color = (uint16_t)(r0[PAL_S0_ADDR +
                                   (pall_num << 8) + palette_index] &
                                0xFFFFu);
 
+            /* Palette alpha nibble 0 means transparent. */
             if (!argb4444_visible(color))
                 continue;
 
-            if (screen_x < SCREEN_WIDTH)
-            {
-                /* Later attribute entries overwrite earlier ones, matching
-                   the sequential sprite line-buffer writes. */
-                sprite_line[screen_x] = color;
-            }
+            /* Later sprite attributes overwrite earlier ones, matching
+               the sequential hardware line-buffer writes. */
+            sprite_line[screen_x] = color;
         }
     }
 }
