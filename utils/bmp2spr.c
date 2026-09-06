@@ -190,14 +190,18 @@ int main(int argc, char *argv[])
         uint8_t bmp_b = bmp_palette[i * 4 + 2];
 
         uint16_t pal_argb;
-        uint16_t *pal_dst = (uint16_t *)&spr_pal[i * 4];
+        uint16_t *pal_dst = (uint16_t *)&spr_pal[i * 2];
 
         pal_argb = 0xF000;
         pal_argb |= (bmp_r & 0xF0 >> 4) << 8;
         pal_argb |= (bmp_g & 0xF0 >> 4) << 4;
         pal_argb |= (bmp_b & 0xF0 >> 4);
 
-        *pal_dst = pal_argb;
+        //Color 0 always transparent
+        if (i != 0)
+            *pal_dst = pal_argb;
+        else
+            *pal_dst = 0x0000;
     }
 
     // Write header
@@ -215,7 +219,7 @@ int main(int argc, char *argv[])
     }
 
     // Write palette
-    if (fwrite(spr_pal, 4, 256, fd_spr) != 256)
+    if (fwrite(spr_pal, 2, 256, fd_spr) != 256)
     {
         perror("Error writing to spr file");
         free(spr_pal);
