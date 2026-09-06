@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 #define SPR_SPRCNT_OFF 4                           // 0-n
 #define SPR_SPRSIZE_OFF 5                          // 16 or 32
 #define SPR_PAL_START 32                           // palette start
-#define SPR_SPRITE_START SPR_PAL_START + (256 * 4) // 256 posible ARGB4444 colors
+#define SPR_SPRITE_START SPR_PAL_START + (256 * 2) // 256 posible 16bit ARGB4444 colors
 
     uint8_t *spr_header;
     spr_header = malloc(SPR_HEADER_SIZE);
@@ -197,7 +197,7 @@ int main(int argc, char *argv[])
         pal_argb |= (bmp_g & 0xF0 >> 4) << 4;
         pal_argb |= (bmp_b & 0xF0 >> 4);
 
-        //Color 0 always transparent
+        // Color 0 always transparent
         if (i != 0)
             *pal_dst = pal_argb;
         else
@@ -232,6 +232,51 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    // Generate Sprite data from image
+    uint8_t *spr_data;
+    spr_data = malloc(bmp_width * bmp_height); // Same size as image, but diferent aragement
+    int frames_x = bmp_width / size;
+    int frames_y = bmp_height / size;
+    uint32_t spr_data_off = 0;
+    uint32_t frame_in = 0;
+
+    for (int frame_y = 0; frame_y < frames_y; frame_y++)
+    {
+        for (int frame_x = 0; frame_x < frames_x; frame_x++)
+        {
+            frame_in = (frame_x * size) + (frame_y * bmp_width);
+            for (int n = 0; n < size * size; n++)
+            {
+
+                if (frame_x == 0 && frame_y == 0)
+                {
+                    printf("DEBUG: frame_in %d, spr_data_off %d n: %d\n", frame_in, spr_data_off, n);
+                }
+                spr_data[spr_data_off] = bmp_image[frame_in];
+
+                frame_in++;
+                if (frame_in % size == 0)
+                    frame_in += bmp_width - size;
+                spr_data_off++;
+            }
+        }
+    }
+
+    if (fwrite(spr_data, 1, bmp_width * bmp_height, fd_spr) != bmp_width * bmp_height)
+    {
+        perror("Error writing to spr file");
+        free(spr_data);
+        free(spr_pal);
+        free(spr_header);
+        bmp_free(bmp_h);
+        free(bmp_image);
+        free(bmp_palette);
+        fclose(fd_bmp);
+        fclose(fd_spr);
+        return 1;
+    }
+
+    free(spr_data);
     free(spr_pal);
     free(spr_header);
     bmp_free(bmp_h);
