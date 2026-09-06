@@ -1,0 +1,1 @@
+gcc bmp2spr.c -o bmp2spr $(pkg-config --cflags --libs libbmp)
