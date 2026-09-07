@@ -183,3 +183,228 @@ void vdp_s0_write_sprite_attribute(sprite_attribute_t spr_att, uint16_t spr_num)
 
     s0_att[spr_num] = attr;
 }
+
+/**
+ * @brief Load sprite pixel data into S0 sprite-data memory from a .spr file.
+ *
+ * .spr format allows for loading multiple sprite images and one palette common to all sprite images.
+ *
+ *
+ *
+ * @param filename File name of .spr file to be loaded.
+ * @param offset   Destination byte offset within S0 sprite-data memory.
+ * @param cnt      Number of sprite-images to load.
+ * @param pal_num  Destination sprite palette number (0..3).
+ * @param sprite_size Size of sprites to be loaded 0 - 16x16 or 1 - 32x32 sprites
+ *
+ */
+int vdp_s0_load_spr_file(const char *filename, uint32_t offset, uint8_t cnt, uint8_t pal_num, uint8_t sprite_size)
+{
+    FILE *fd = fopen(filename, "rb");
+
+    uint8_t *header;
+    uint16_t *palette;
+    uint8_t *data_chunk;
+
+    if (fd == NULL)
+    {
+        perror("Failed opening .spr file");
+        return -1;
+    }
+
+    header = malloc(SPR_HEADER_SIZE);
+
+    if (fread(header, 1, SPR_HEADER_SIZE, fd) != SPR_HEADER_SIZE)
+    {
+        perror("Failed parsing header of .spr file");
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    if (memcmp(&header[SPR_MAGIC_OFF], SPR_MAGIC, 3) != 0)
+    {
+        printf("File format error of %s\n", filename);
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    // Magic is fine so this is a .spr file
+
+    uint16_t pal_color_cnt = (uint16_t)header[SPR_PAL_COLORS_OFF] + 1;
+    uint16_t spr_cnt = (uint16_t)header[SPR_SPRCNT_OFF] + 1;
+    uint8_t size = header[SPR_SPRSIZE_OFF];
+
+    if ((spr_cnt == 0) || (size != (sprite_size ? 32 : 16)) || (cnt > spr_cnt || cnt == 0) || (pal_num > 3))
+    {
+        printf("Invalid file parameters for loading %d %dx%d sprites from .spr file %s\n", cnt, (sprite_size ? 32 : 16), (sprite_size ? 32 : 16), filename);
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    free(header);
+
+    // Everything is ok, now start loading
+    palette = malloc(2 * pal_color_cnt);
+    if (palette == NULL)
+    {
+        perror("Failed to allocate memory for palette");
+        fclose(fd);
+        return -1;
+    }
+
+    if (fread(palette, 2, pal_color_cnt, fd) != pal_color_cnt)
+    {
+        perror("Failed to load palette from file");
+        free(palette);
+        fclose(fd);
+        return -1;
+    }
+
+    vdp_s0_load_palette(palette, pal_color_cnt, pal_num);
+    free(palette);
+
+    size_t data_size = cnt * (size * size);
+    if ((data_size + offset) > 32768)
+    {
+        printf("Cannet load %lu bytes of sprite data: out of VDP memory\n", data_size);
+        fclose(fd);
+        return -1;
+    }
+    data_chunk = malloc(data_size);
+    if (data_chunk == NULL)
+    {
+        perror("Failed to allocate memory for spr data");
+        fclose(fd);
+        return -1;
+    }
+
+    if (fread(data_chunk, 1, data_size, fd) != data_size)
+    {
+        if (errno != 0)
+            perror("Failed to load spr data");
+        else
+            printf("Failed to load %lu bytes of spr data: out of data\n", data_size);
+        free(data_chunk);
+        fclose(fd);
+        return -1;
+    }
+
+    vdp_s0_load_sprite_data(data_chunk, data_size, offset);
+    free(data_chunk);
+    fclose(fd);
+    return 0;
+}
+
+/**
+ * @brief Load B0 pixel data into B0 bitmap memory from a .b0 file.
+ *
+ * .b0 format allows for loading custom size images less than or equal to 1024x1024 into B0 layer
+ *
+ *
+ *
+ * @param filename File name of .b0 file to be loaded.
+ * @param x_off    Destination x offset within B0 layer.
+ * @param y_off    Destination y offset within B0 layer.
+ *
+ */
+int vdp_b0_load_b0_file(const char *filename, int x_off, int y_off)
+{
+    FILE *fd = fopen(filename, "rb");
+
+    uint8_t *header;
+
+    if (fd == NULL)
+    {
+        perror("Failed opening .b0 file");
+        return -1;
+    }
+
+    header = malloc(B0_HEADER_SIZE);
+
+    if (fread(header, 1, B0_HEADER_SIZE, fd) != B0_HEADER_SIZE)
+    {
+        perror("Failed loading header of .b0 file");
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    if (memcmp(&header[B0_MAGIC_OFF], B0_MAGIC, 3) != 0)
+    {
+        printf("File format error of %s\n", filename);
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    // Magic is fine so this is a .b0 file
+
+    uint16_t width;
+    uint16_t height;
+    memcpy(&width, &header[B0_WIDTH_OFF], sizeof(uint16_t));
+    memcpy(&height, &header[B0_HEIGHT_OFF], sizeof(uint16_t));
+
+    free(header);
+    if (x_off > 1024 || x_off < -1024 || y_off > 1024 || y_off < -1024)
+    {
+        printf("Argument error incorect x and/or y offset!\n");
+        fclose(fd);
+        return -1;
+    }
+
+    if (width > 1024 || height > 1024)
+    {
+        printf("File format error incorect width and/or height!\n");
+        fclose(fd);
+        return -1;
+    }
+
+    uint16_t file_x_start = x_off < 0 ? -x_off : 0;
+    uint16_t file_y_start = y_off < 0 ? -y_off : 0;
+
+    uint16_t b0_x_start = x_off < 0 ? 0 : x_off;
+    uint16_t b0_y_start = y_off < 0 ? 0 : y_off;
+
+    uint16_t file_x_off_screen = x_off < 0 ? -x_off : (x_off + width) > 1024 ? (x_off + width) - 1024
+                                                                             : 0;
+
+    uint16_t file_y_off_screen = y_off < 0 ? -y_off : (y_off + height) > 1024 ? (y_off + height) - 1024
+                                                                             : 0;
+
+    uint16_t x_len = width - file_x_off_screen;
+    uint16_t y_len = height - file_y_off_screen;
+
+    printf(
+        "file: x=%u y=%u | b0: x=%u y=%u | size: %ux%u\nOffscreen_x: %u",
+        (unsigned)file_x_start,
+        (unsigned)file_y_start,
+        (unsigned)b0_x_start,
+        (unsigned)b0_y_start,
+        (unsigned)x_len,
+        (unsigned)y_len,
+        (unsigned)file_x_off_screen);
+    // Pointer set to first pixel
+    if (((file_y_start * width) + file_x_start) * 2 != 0)
+        fseek(fd, ((file_y_start * width) + file_x_start) * 2, SEEK_CUR);
+
+    printf("seek %d\n", ((file_y_start * width) + file_x_start) * 2);
+
+    for (int y = 0; y < y_len; y++)
+    {
+        if (fread((void *)&b0[((y + b0_y_start) * 1024) + b0_x_start], 2, x_len, fd) != x_len)
+        {
+            perror("Image file read");
+            fclose(fd);
+            printf("Size: %d\n", x_len);
+            return -1;
+        }
+        // Seek to start of next line
+        fseek(fd, file_x_off_screen * 2, SEEK_CUR);
+    }
+
+    fclose(fd);
+    return 0;
+}

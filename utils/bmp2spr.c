@@ -142,6 +142,14 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    if (((bmp_width / size) * (bmp_height / size)) > 256)
+    {
+        printf("Max number of sprites per file is 256, this file has %d\n", ((bmp_width / size) * (bmp_height / size)));
+        bmp_free(bmp_h);
+        fclose(fd_bmp);
+        fclose(fd_spr);
+        return 1;
+    }
     printf("INFO: width: %d height: %d\nBits per channel: %d\nChannels: %d\n", bmp_width, bmp_height, bmp_bitsperchannel, bmp_channels);
 
     uint8_t *bmp_image = malloc(bmp_width * bmp_height);
@@ -166,7 +174,7 @@ int main(int argc, char *argv[])
 #define SPR_MAGIC "SPR"
 #define SPR_MAGIC_OFF 0                            //"SPR"
 #define SPR_PAL_COLORS_OFF 3                       // 0-255 (total colors - 1)
-#define SPR_SPRCNT_OFF 4                           // 0-n
+#define SPR_SPRCNT_OFF 4                           // 0-255 (total count - 1)
 #define SPR_SPRSIZE_OFF 5                          // 16 or 32
 #define SPR_PAL_START 32                           // palette start
 #define SPR_SPRITE_START SPR_PAL_START + (256 * 2) // 256 posible 16bit ARGB4444 colors
@@ -179,6 +187,7 @@ int main(int argc, char *argv[])
 
     spr_header[SPR_PAL_COLORS_OFF] = (uint8_t)bmp_pal_num_colors - 1;
     spr_header[SPR_SPRSIZE_OFF] = (uint8_t)size;
+    spr_header[SPR_SPRCNT_OFF] = ((bmp_width / size) * (bmp_height / size)) - 1;
 
     uint8_t *spr_pal = malloc(256 * 4);
     // Copy and transform palete entries
@@ -193,9 +202,9 @@ int main(int argc, char *argv[])
         uint16_t *pal_dst = (uint16_t *)&spr_pal[i * 2];
 
         pal_argb = 0xF000;
-        pal_argb |= (bmp_r & 0xF0 >> 4) << 8;
-        pal_argb |= (bmp_g & 0xF0 >> 4) << 4;
-        pal_argb |= (bmp_b & 0xF0 >> 4);
+        pal_argb |= ((bmp_r & 0xF0) >> 4) << 8;
+        pal_argb |= ((bmp_g & 0xF0) >> 4) << 4;
+        pal_argb |= ((bmp_b & 0xF0) >> 4);
 
         // Color 0 always transparent
         if (i != 0)
@@ -248,10 +257,12 @@ int main(int argc, char *argv[])
             for (int n = 0; n < size * size; n++)
             {
 
+                /*
                 if (frame_x == 0 && frame_y == 0)
                 {
                     printf("DEBUG: frame_in %d, spr_data_off %d n: %d\n", frame_in, spr_data_off, n);
                 }
+                */
                 spr_data[spr_data_off] = bmp_image[frame_in];
 
                 frame_in++;

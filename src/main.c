@@ -7,7 +7,7 @@
 // Bok
 #include <app.h>
 
-int main(void)
+int main(int argc, char **argv)
 {
     if (vdp_init() != 0)
     {
@@ -24,7 +24,7 @@ int main(void)
         return 1;
     }
 
-    start();
+    start(argc, argv);
     while (1)
     {
         loop();

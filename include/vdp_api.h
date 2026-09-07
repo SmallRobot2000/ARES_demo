@@ -3,12 +3,34 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <malloc.h>
+#include <string.h>
 #include <vdp.h>
-
+#include <errno.h>
 #ifdef __cplusplus
 extern "C"
 {
 #endif
+
+    /*
+       SPR file
+    */
+#define SPR_HEADER_SIZE 32
+#define SPR_MAGIC "SPR"
+#define SPR_MAGIC_OFF 0                            //"SPR"
+#define SPR_PAL_COLORS_OFF 3                       // 0-255 (total colors - 1)
+#define SPR_SPRCNT_OFF 4                           // 0-n
+#define SPR_SPRSIZE_OFF 5                          // 16 or 32
+#define SPR_PAL_START 32                           // palette start
+#define SPR_SPRITE_START SPR_PAL_START + (256 * 2) // 256 posible 16bit ARGB4444 colors
+
+#define B0_HEADER_SIZE 8
+#define B0_MAGIC "B0L"
+#define B0_MAGIC_OFF 0 //"B0L"
+#define B0_WIDTH_OFF 4
+#define B0_HEIGHT_OFF 6
+#define B0_IMAGE_OFF 8
 
     /**
      * @brief S0 sprite attribute description.
@@ -77,7 +99,9 @@ extern "C"
     */
 
     static inline uint32_t vdp_get_current_line(void) { return r0[VDP_LINE_REG]; }
-
+    static inline uint16_t vdp_bg_get_color(void) { return (uint16_t)r0[VDP_BG_REG]; }
+    static inline uint32_t vdp_b0_get_x_offset(void) { return r0[VDP_B0_X_OFF_REG]; }
+    static inline uint32_t vdp_b0_get_y_offset(void) { return r0[VDP_B0_Y_OFF_REG]; }
     /*
 
         Set value functions
@@ -90,6 +114,7 @@ extern "C"
     static inline void vdp_t1_set_y_offset(uint32_t offset) { r0[VDP_T1_Y_OFF_REG] = offset; }
     static inline void vdp_b0_set_x_offset(uint32_t offset) { r0[VDP_B0_X_OFF_REG] = offset; }
     static inline void vdp_b0_set_y_offset(uint32_t offset) { r0[VDP_B0_Y_OFF_REG] = offset; }
+    static inline void vdp_bg_set_color(uint16_t color) { r0[VDP_BG_REG] = (uint32_t)color; }
 
     /*
         Set the background color in RGB444 format
@@ -106,6 +131,9 @@ extern "C"
     void vdp_s0_load_palette(const uint16_t *pal_data, size_t count, uint8_t pal_num);
     void vdp_s0_load_sprite_data(const uint8_t *spr_data, size_t size, uint32_t offset);
     void vdp_s0_write_sprite_attribute(sprite_attribute_t spr_att, uint16_t spr_num);
+    int vdp_s0_load_spr_file(const char *filename, uint32_t offset, uint8_t cnt, uint8_t pal_num, uint8_t sprite_size);
+    int vdp_b0_load_b0_file(const char *filename, int x_off, int y_off);
+
 #ifdef __cplusplus
 }
 #endif

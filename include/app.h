@@ -5,9 +5,9 @@
 extern "C" {
 #endif
 
-void start(void);
+void start(int argc, char **argv);
 void loop(void);
-
+int ray_demo(int argc, char **argv);
 #ifdef __cplusplus
 }
 #endif

@@ -102,17 +102,17 @@ static const uint8_t sprite32_smile[32 * 32] = {
 
     // row 31
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-void start()
+extern int ray_demo(int argc, char **argv);
+void start(int argc, char **argv)
 {
 
     vdp_b0_enable();
     vdp_s0_enable();
     vdp_b0_enable_linux_mode();
 
-    for (int i = 0; i < 640 * 480; i++)
+    for (int i = 0; i < 1024 * 1024; i++)
     {
-        b0[i] = 0xFFFF;
+        b0[i] = 0xF008;
     }
 
     /*
@@ -191,30 +191,46 @@ void start()
     }
 
     printf("Integer mul/add loops in one frame: %u\n", cnt);
+
+    vdp_bg_set_color(0x0000);
+    // vdp_b0_disable();
+    printf("Loading .spr\n");
+    int err = vdp_s0_load_spr_file("assets/test.spr", 0, 1, 0, 1); // Overwrite smile
+    if (err)
+        printf("Failed to laod .spr\n");
+
+    vdp_b0_disable_linux_mode();
+    err = vdp_b0_load_b0_file("assets/bitmap1.b0", 200, 100);
+    // Ray demo
+    // ray_demo(argc, argv);
 }
 
 void loop()
 {
-    
+
     if (keyboard_get_event(&ev) == 1)
     {
         if (ev.key == KEY_D)
         {
+            vdp_b0_set_x_offset(vdp_b0_get_x_offset() + 1);
             spr.x_pos += 1;
         }
 
         if (ev.key == KEY_A)
         {
+            vdp_b0_set_x_offset(vdp_b0_get_x_offset() - 1);
             spr.x_pos -= 1;
         }
 
         if (ev.key == KEY_W)
         {
+            vdp_b0_set_y_offset(vdp_b0_get_y_offset() + 1);
             spr.y_pos -= 1;
         }
 
         if (ev.key == KEY_S)
         {
+            vdp_b0_set_y_offset(vdp_b0_get_y_offset() - 1);
             spr.y_pos += 1;
         }
 
@@ -229,5 +245,15 @@ void loop()
         }
 
         vdp_s0_write_sprite_attribute(spr, 0);
+
+        if (vdp_b0_get_x_offset() >= 1024)
+        {
+            vdp_b0_set_x_offset(0);
+        }
+
+        if (vdp_b0_get_y_offset() >= 1024)
+        {
+            vdp_b0_set_y_offset(0);
+        }
     }
 }
