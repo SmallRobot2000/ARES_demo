@@ -1,0 +1,11 @@
+enable:B0
+wait:1000
+load:B0:file.b0:10:01
+load_sprite:S0:file.spr:16:4:32:0
+disable:S0
+action:B0:scroll_x_delta:50
+action:B0:scroll_y_delta:-50
+enable:S0
+wait:500
+action:S0:sprite_deactivate:1
+//This a comment

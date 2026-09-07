@@ -185,6 +185,56 @@ void vdp_s0_write_sprite_attribute(sprite_attribute_t spr_att, uint16_t spr_num)
 }
 
 /**
+ * @brief Read one sprite attribute entry from the S0 sprite attribute table.
+ *
+ * Reads the 64-bit S0 hardware attribute and converts it into a
+ * sprite_attribute_t structure.
+ *
+ * @param spr_num Source sprite number in the S0 attribute table (0..63).
+ *
+ * @return Decoded sprite attribute structure.
+ */
+sprite_attribute_t vdp_s0_read_sprite_attribute(uint16_t spr_num)
+{
+    /*
+     * Hardware attribute layout:
+     *
+     *   bits  9:0   X position       (0..1023)
+     *   bits 15:10  Reserved
+     *   bits 25:16  Y position       (0..1023)
+     *   bits 35:26  Reserved
+     *   bits 46:36  Sprite-data offset in 16-byte words (0..2047)
+     *   bit  47      Reserved
+     *   bits 49:48  Palette number   (0..3)
+     *   bit  50      Horizontal flip
+     *   bit  51      Vertical flip
+     *   bit  52      Sprite size     (0 = 16x16, 1 = 32x32)
+     *   bits 54:53  Scale            (0..3)
+     *   bits 62:55  Reserved
+     *   bit  63      Active
+     */
+
+    uint64_t attr = s0_att[spr_num];
+
+    sprite_attribute_t spr_att = {0};
+
+    spr_att.x_pos   = (uint16_t)((attr >> 0)  & 0x03FFu);
+    spr_att.y_pos   = (uint16_t)((attr >> 16) & 0x03FFu);
+    spr_att.offset  = (uint16_t)((attr >> 36) & 0x07FFu);
+
+    spr_att.pal_num = (uint8_t)((attr >> 48) & 0x03u);
+    spr_att.h_flip  = (uint8_t)((attr >> 50) & 0x01u);
+    spr_att.v_flip  = (uint8_t)((attr >> 51) & 0x01u);
+    spr_att.size    = (uint8_t)((attr >> 52) & 0x01u);
+    spr_att.scale   = (uint8_t)((attr >> 53) & 0x03u);
+
+    spr_att.active  = (uint8_t)((attr >> 63) & 0x01u);
+
+    return spr_att;
+}
+
+
+/**
  * @brief Load sprite pixel data into S0 sprite-data memory from a .spr file.
  *
  * .spr format allows for loading multiple sprite images and one palette common to all sprite images.

@@ -2,7 +2,7 @@
 #include <vdp.h>
 #include <vdp_api.h>
 #include <kbd.h>
-
+#include <scener.h>
 keyboard_event_t ev;
 sprite_attribute_t spr;
 
@@ -106,6 +106,8 @@ extern int ray_demo(int argc, char **argv);
 void start(int argc, char **argv)
 {
 
+
+
     vdp_b0_enable();
     vdp_s0_enable();
     vdp_b0_enable_linux_mode();
@@ -203,6 +205,10 @@ void start(int argc, char **argv)
     err = vdp_b0_load_b0_file("assets/bitmap1.b0", 200, 100);
     // Ray demo
     // ray_demo(argc, argv);
+
+    scener_run_file("assets/scene.sen");
+
+    
 }
 
 void loop()
