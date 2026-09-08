@@ -1,3 +1,5 @@
+#define _DEFAULT_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <vdp_api.h>
@@ -10,6 +12,12 @@
 #define SCENE_CMD_LOAD_SPRITE 3
 #define SCENE_CMD_ACTION 4
 #define SCENE_CMD_WAIT 5
+
+int cmd_get_int_arg(
+    char *scene_line,
+    int *arg,
+    const char *filename,
+    int line_num);
 
 char *commands[SCENE_NUMBER_OF_COMMANDS] = {
     "enable",
