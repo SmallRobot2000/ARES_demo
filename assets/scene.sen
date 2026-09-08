@@ -21,4 +21,14 @@ action:S0:sprite_set:1:40:50:0:0:32:1
 action:S0:sprite_activate:1
 action:S0:sprite_deactivate:0
 enable:T0
+action:S0:sprite_h_flip:0:1
+action:S0:sprite_v_flip:0:1
+wait:20
+action:S0:sprite_scale:0:2
+action:S0:sprite_scale:0:3
+action:S0:sprite_set:1:100:100:0:0:32:1
+action:S0:sprite_set:1:0:0
+action:S0:sprite_activate:1
+action:S0:sprite_activate:0
+
 
