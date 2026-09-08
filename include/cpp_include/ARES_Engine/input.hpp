@@ -30,10 +30,6 @@ namespace ARES_Engine
         /// @return True if the key was released this frame.
         static bool is_key_released(int key);
 
-        /// @brief Checks whether a key was released during the current frame.
-        /// @param key Linux KEY_* code.
-        /// @return True if the key was released this frame.
-        static bool is_key_released(int key);
 
     private:
         // Internal state for key tracking

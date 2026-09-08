@@ -124,8 +124,20 @@ static const uint8_t sprite32_smile[32 * 32] = {
     // row 31
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 extern int ray_demo(int argc, char **argv);
+
+extern int keyboard_init(void);
 void start(int argc, char **argv)
 {
+
+    if (keyboard_init())
+    {
+        printf("Kbd error\n");
+    }
+
+    if (keyboard_init())
+    {
+        printf("Kbd error\n");
+    }
 
     vdp_b0_enable();
     vdp_s0_enable();
@@ -233,7 +245,10 @@ void start(int argc, char **argv)
     std::array<bool, KEY_MAX + 1> tempTestFinalFinal = {};
 
     auto start = std::chrono::high_resolution_clock::now();
-    tempTestFinalFinal.fill(true);
+
+    for (auto var : tempTestFinalFinal)
+        var = true;
+
     auto end = std::chrono::high_resolution_clock::now();
 
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);

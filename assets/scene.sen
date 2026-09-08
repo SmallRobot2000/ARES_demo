@@ -3,7 +3,7 @@ disable:T0
 disable:T1
 wait:1000
 load:T0:assets/tiles.til
-
+load:B0:assets/peper.b0:0:0
 disable:S0
 action:B0:scroll_x_delta:50
 action:B0:scroll_y_delta:-50
@@ -30,5 +30,8 @@ action:S0:sprite_set:1:100:100:0:0:32:1
 action:S0:sprite_set:1:0:0
 action:S0:sprite_activate:1
 action:S0:sprite_activate:0
-
+disable:T0
+disable:S0
+action:B0:scroll_x_set:0
+action:B0:scroll_y_set:0
 
