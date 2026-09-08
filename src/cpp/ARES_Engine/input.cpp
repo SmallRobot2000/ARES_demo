@@ -11,9 +11,12 @@ namespace ARES_Engine
         if (keyboard_init() != 0)
             return false;
 
-        m_keys_down.fill(false);
-        m_keys_pressed.fill(false);
-        m_keys_released.fill(false);
+        for (int i = 0; i <= KEY_MAX; ++i)
+        {
+            m_keys_down[i] = false;
+            m_keys_pressed[i] = false;
+            m_keys_released[i] = false;
+        }
 
         return true;
     }
@@ -24,8 +27,11 @@ namespace ARES_Engine
             return;
 
         // Pressed and released only last for one frame.
-        m_keys_pressed.fill(false);
-        m_keys_released.fill(false);
+        for (int i = 0; i <= KEY_MAX; ++i)
+        {
+            m_keys_pressed[i] = false;
+            m_keys_released[i] = false;
+        }
 
         keyboard_event_t event;
 

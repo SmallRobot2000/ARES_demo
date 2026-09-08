@@ -1,7 +1,7 @@
 ENGINE
 │
 ├── Engine
-│   ├── init()
+│   ├── init() - clear screen
 │   ├── shutdown()
 │   ├── update()
 │   ├── render()
@@ -29,7 +29,7 @@ ENGINE
 │   └── lerp()
 │
 ├── Sprite
-│   ├── load()
+│   ├── load() X
 │   ├── set_position()
 │   ├── set_scale()
 │   ├── set_flip()
@@ -40,35 +40,19 @@ ENGINE
 ├── Renderer
 │   ├── init()
 │   ├── shutdown()
-│   ├── begin_frame()
-│   ├── end_frame()
+│   ├── begin_frame() 
+│   ├── end_frame() 
 │   ├── clear()
 │   ├── draw()
 │   └── set_camera()
 │
-├── Camera
-│   ├── set_position()
-│   ├── move()
-│   ├── follow()
-│   ├── set_bounds()
-│   ├── world_to_screen()
-│   └── screen_to_world()
-│
 ├── Tilemap
-│   ├── load()
+│   ├── load() X
 │   ├── get_tile()
 │   ├── set_tile()
 │   ├── tile_to_world()
 │   ├── world_to_tile()
 │   └── draw()
-│
-├── Entity
-│   ├── update()
-│   ├── draw()
-│   ├── position()
-│   ├── velocity()
-│   ├── bounds()
-│   └── destroy()
 │
 ├── Collision
 │   ├── point_vs_rect()
@@ -86,19 +70,8 @@ ENGINE
 │   ├── update()
 │   └── finished()
 │
-├── Scene
-│   ├── enter()
-│   ├── exit()
-│   ├── update()
-│   └── draw()
-│
-├── Resources
-│   ├── sprite()
-│   ├── tilemap()
-│   └── unload_all()
-│
-└── Debug
-    ├── log()
-    ├── draw_point()
-    ├── draw_rect()
-    └── show_colliders()
+└── World
+    ├── enter()
+    ├── exit()
+    ├── update()
+    └── draw()
