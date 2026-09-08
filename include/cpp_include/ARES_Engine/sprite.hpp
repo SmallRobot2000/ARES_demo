@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+// TODO: add destructor
+
 class Sprite
 {
 public:
