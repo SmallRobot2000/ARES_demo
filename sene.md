@@ -8,7 +8,9 @@ Tutorial for .sen format:
 
 `action:<layer: B0/T0/T1/S0>:<action>` -> does action on selected buffer
 
-`load:<layer: B0/T0/T1>:<filename>:<x_off>:<y_off>` -> loads "filename.<extension for correct layer> to that layer data/palette/map and offset"
+`load:<layer: B0>:<filename>:<x_off>:<y_off>` -> loads "filename.b0 to B0 layer data/palette VDP memory and offset"
+
+`load:<layer: T0/T1>:<filename>:<offset>:<cnt>:<load_palette>` -> loads "filename.b0 to B0 layer data/palette VDP memory at `offset`, loads `<cnt>` characters, loads palette if `<load_palette>`selected"
 
 `load_sprite:<layer: S0>:<filename>:<offset>:<sprite_count>:<sprite size 16 or 32>:<pal_num>` -> loads `<filename>` to S0 with specified parameters
 
@@ -45,6 +47,8 @@ Only for `S0` layer:
 `sprite_v_flip:<sprite number>:<v_flip 1 or 0>` -> sets `<sprite_number>` `v_flip` attribute
 
 `sprite_scale:<sprite number>:<scale (0 - 3)>` -> sets `<sprite_number>` `scale` attribute
+
+`sprite_frame:<sprite number>:<offset>:<frame>` -> sets `<sprite_number>` to the frame of base offset and count frame in units of size of the sprite
 
 
 

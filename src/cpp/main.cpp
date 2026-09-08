@@ -106,8 +106,6 @@ extern int ray_demo(int argc, char **argv);
 void start(int argc, char **argv)
 {
 
-
-
     vdp_b0_enable();
     vdp_s0_enable();
     vdp_b0_enable_linux_mode();
@@ -206,9 +204,12 @@ void start(int argc, char **argv)
     // Ray demo
     // ray_demo(argc, argv);
 
-    scener_run_file("assets/scene.sen");
+    printf("Load tile data\n");
+    vdp_t0_load_til_file("assets/tiles.til", 0, 10, 1);
 
+    t0_map[0] = 0;
     
+    scener_run_file("assets/scene.sen");
 }
 
 void loop()

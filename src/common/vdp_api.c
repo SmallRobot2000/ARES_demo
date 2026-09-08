@@ -218,21 +218,20 @@ sprite_attribute_t vdp_s0_read_sprite_attribute(uint16_t spr_num)
 
     sprite_attribute_t spr_att = {0};
 
-    spr_att.x_pos   = (uint16_t)((attr >> 0)  & 0x03FFu);
-    spr_att.y_pos   = (uint16_t)((attr >> 16) & 0x03FFu);
-    spr_att.offset  = (uint16_t)((attr >> 36) & 0x07FFu);
+    spr_att.x_pos = (uint16_t)((attr >> 0) & 0x03FFu);
+    spr_att.y_pos = (uint16_t)((attr >> 16) & 0x03FFu);
+    spr_att.offset = (uint16_t)((attr >> 36) & 0x07FFu);
 
     spr_att.pal_num = (uint8_t)((attr >> 48) & 0x03u);
-    spr_att.h_flip  = (uint8_t)((attr >> 50) & 0x01u);
-    spr_att.v_flip  = (uint8_t)((attr >> 51) & 0x01u);
-    spr_att.size    = (uint8_t)((attr >> 52) & 0x01u);
-    spr_att.scale   = (uint8_t)((attr >> 53) & 0x03u);
+    spr_att.h_flip = (uint8_t)((attr >> 50) & 0x01u);
+    spr_att.v_flip = (uint8_t)((attr >> 51) & 0x01u);
+    spr_att.size = (uint8_t)((attr >> 52) & 0x01u);
+    spr_att.scale = (uint8_t)((attr >> 53) & 0x03u);
 
-    spr_att.active  = (uint8_t)((attr >> 63) & 0x01u);
+    spr_att.active = (uint8_t)((attr >> 63) & 0x01u);
 
     return spr_att;
 }
-
 
 /**
  * @brief Load sprite pixel data into S0 sprite-data memory from a .spr file.
@@ -319,7 +318,7 @@ int vdp_s0_load_spr_file(const char *filename, uint32_t offset, uint8_t cnt, uin
     size_t data_size = cnt * (size * size);
     if ((data_size + offset) > 32768)
     {
-        printf("Cannet load %lu bytes of sprite data: out of VDP memory\n", data_size);
+        printf("Cannet load %lu bytes of sprite data: out of VDP memory\n", (unsigned long)data_size);
         fclose(fd);
         return -1;
     }
@@ -336,7 +335,7 @@ int vdp_s0_load_spr_file(const char *filename, uint32_t offset, uint8_t cnt, uin
         if (errno != 0)
             perror("Failed to load spr data");
         else
-            printf("Failed to load %lu bytes of spr data: out of data\n", data_size);
+            printf("Failed to load %lu bytes of spr data: out of data\n", (unsigned long)data_size);
         free(data_chunk);
         fclose(fd);
         return -1;
@@ -422,7 +421,7 @@ int vdp_b0_load_b0_file(const char *filename, int x_off, int y_off)
                                                                              : 0;
 
     uint16_t file_y_off_screen = y_off < 0 ? -y_off : (y_off + height) > 1024 ? (y_off + height) - 1024
-                                                                             : 0;
+                                                                              : 0;
 
     uint16_t x_len = width - file_x_off_screen;
     uint16_t y_len = height - file_y_off_screen;
@@ -455,6 +454,244 @@ int vdp_b0_load_b0_file(const char *filename, int x_off, int y_off)
         fseek(fd, file_x_off_screen * 2, SEEK_CUR);
     }
 
+    fclose(fd);
+    return 0;
+}
+
+/**
+ * @brief Load tile pixel data into T0 tile-data memory from a .til file.
+ *
+ * .til format allows for loading multiple tile images and one palette common to all tile images.
+ *
+ *
+ *
+ * @param filename File name of .til file to be loaded.
+ * @param offset   Destination byte offset within T0 tile-data memory.
+ * @param cnt      Number of tile-images to load.
+ * @param load_pal 1 - to load palette 0 - to not load palette
+ *
+ */
+int vdp_t0_load_til_file(const char *filename, uint32_t offset, uint8_t cnt, int load_pal)
+{
+    FILE *fd = fopen(filename, "rb");
+
+    uint8_t *header;
+    uint16_t *palette;
+    uint8_t *data_chunk;
+
+    if (fd == NULL)
+    {
+        perror("Failed opening .til file");
+        return -1;
+    }
+
+    header = malloc(TIL_HEADER_SIZE);
+
+    if (fread(header, 1, TIL_HEADER_SIZE, fd) != TIL_HEADER_SIZE)
+    {
+        perror("Failed parsing header of .spr file");
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    if (memcmp(&header[TIL_MAGIC_OFF], TIL_MAGIC, 3) != 0)
+    {
+        printf("File format error of %s\n", filename);
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    // Magic is fine so this is a .til file
+
+    uint16_t pal_color_cnt = (uint16_t)header[TIL_PAL_COLORS_OFF] + 1;
+    uint16_t tile_cnt;
+    memcpy(&tile_cnt, &header[TIL_TILCNT_OFF], 2);
+
+    if ((tile_cnt == 0) || cnt > tile_cnt || cnt == 0)
+    {
+        printf("Invalid file parameters for loading %d tiles from .til file %s\n", cnt, filename);
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    free(header);
+
+    // Everything is ok, now start loading
+    if (load_pal)
+    {
+        palette = malloc(2 * pal_color_cnt);
+        if (palette == NULL)
+        {
+            perror("Failed to allocate memory for palette");
+            fclose(fd);
+            return -1;
+        }
+
+        if (fread(palette, 2, pal_color_cnt, fd) != pal_color_cnt)
+        {
+            perror("Failed to load palette from file");
+            free(palette);
+            fclose(fd);
+            return -1;
+        }
+
+        vdp_t0_load_palette(palette, pal_color_cnt);
+
+        free(palette);
+    }
+
+    fseek(fd, TIL_TIL_START, SEEK_SET);
+
+    size_t data_size = cnt * (TIL_SIZE * TIL_SIZE);
+    if ((offset + data_size > 1024 * TIL_SIZE * TIL_SIZE))
+    {
+        printf("Cannet load %lu bytes of sprite data: out of VDP memory\n", (unsigned long)data_size);
+        fclose(fd);
+        return -1;
+    }
+    data_chunk = malloc(data_size);
+    if (data_chunk == NULL)
+    {
+        perror("Failed to allocate memory for spr data");
+        fclose(fd);
+        return -1;
+    }
+
+    if (fread(data_chunk, 1, data_size, fd) != data_size)
+    {
+        if (errno != 0)
+            perror("Failed to load spr data");
+        else
+            printf("Failed to load %lu bytes of spr data: out of data\n", (unsigned long)data_size);
+        free(data_chunk);
+        fclose(fd);
+        return -1;
+    }
+
+    vdp_t0_load_char_data(data_chunk, data_size, offset);
+    free(data_chunk);
+    fclose(fd);
+    return 0;
+}
+
+/**
+ * @brief Load tile pixel data into T1 tile-data memory from a .til file.
+ *
+ * .til format allows for loading multiple tile images and one palette common to all tile images.
+ *
+ *
+ *
+ * @param filename File name of .til file to be loaded.
+ * @param offset   Destination byte offset within T1 tile-data memory.
+ * @param cnt      Number of tile-images to load.
+ * @param load_pal 1 - to load palette 0 - to not load palette
+ *
+ */
+int vdp_t1_load_til_file(const char *filename, uint32_t offset, uint8_t cnt, int load_pal)
+{
+    FILE *fd = fopen(filename, "rb");
+
+    uint8_t *header;
+    uint16_t *palette;
+    uint8_t *data_chunk;
+
+    if (fd == NULL)
+    {
+        perror("Failed opening .til file");
+        return -1;
+    }
+
+    header = malloc(TIL_HEADER_SIZE);
+
+    if (fread(header, 1, TIL_HEADER_SIZE, fd) != TIL_HEADER_SIZE)
+    {
+        perror("Failed parsing header of .spr file");
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    if (memcmp(&header[TIL_MAGIC_OFF], TIL_MAGIC, 3) != 0)
+    {
+        printf("File format error of %s\n", filename);
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    // Magic is fine so this is a .til file
+
+    uint16_t pal_color_cnt = (uint16_t)header[TIL_PAL_COLORS_OFF] + 1;
+    uint16_t tile_cnt;
+    memcpy(&tile_cnt, &header[TIL_TILCNT_OFF], 2);
+
+    if ((tile_cnt == 0) || cnt > tile_cnt || cnt == 0)
+    {
+        printf("Invalid file parameters for loading %d tiles from .til file %s\n", cnt, filename);
+        free(header);
+        fclose(fd);
+        return -1;
+    }
+
+    free(header);
+
+    // Everything is ok, now start loading
+    if (load_pal)
+    {
+        palette = malloc(2 * pal_color_cnt);
+        if (palette == NULL)
+        {
+            perror("Failed to allocate memory for palette");
+            fclose(fd);
+            return -1;
+        }
+
+        if (fread(palette, 2, pal_color_cnt, fd) != pal_color_cnt)
+        {
+            perror("Failed to load palette from file");
+            free(palette);
+            fclose(fd);
+            return -1;
+        }
+
+        vdp_t1_load_palette(palette, pal_color_cnt);
+
+        free(palette);
+    }
+
+    fseek(fd, TIL_TIL_START, SEEK_SET);
+
+    size_t data_size = cnt * (TIL_SIZE * TIL_SIZE);
+    if ((offset + data_size > 1024 * TIL_SIZE * TIL_SIZE))
+    {
+        printf("Cannet load %lu bytes of sprite data: out of VDP memory\n", (unsigned long)data_size);
+        fclose(fd);
+        return -1;
+    }
+    data_chunk = malloc(data_size);
+    if (data_chunk == NULL)
+    {
+        perror("Failed to allocate memory for spr data");
+        fclose(fd);
+        return -1;
+    }
+
+    if (fread(data_chunk, 1, data_size, fd) != data_size)
+    {
+        if (errno != 0)
+            perror("Failed to load spr data");
+        else
+            printf("Failed to load %lu bytes of spr data: out of data\n", (unsigned long)data_size);
+        free(data_chunk);
+        fclose(fd);
+        return -1;
+    }
+
+    vdp_t1_load_char_data(data_chunk, data_size, offset);
+    free(data_chunk);
     fclose(fd);
     return 0;
 }

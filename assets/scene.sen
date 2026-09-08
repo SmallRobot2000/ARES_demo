@@ -1,11 +1,24 @@
 enable:B0
+disable:T0
+disable:T1
 wait:1000
-load:B0:file.b0:10:01
-load_sprite:S0:file.spr:16:4:32:0
+load:T0:assets/tiles.til
+
 disable:S0
 action:B0:scroll_x_delta:50
 action:B0:scroll_y_delta:-50
 enable:S0
 wait:500
-action:S0:sprite_deactivate:1
+action:S0:sprite_activate:0
+action:S0:sprite_move:0:10:10
 //This a comment
+action:S0:sprite_h_flip:0:1
+action:S0:sprite_v_flip:0:1
+wait:20
+action:S0:sprite_scale:0:2
+action:S0:sprite_frame:1:0:0
+action:S0:sprite_set:1:40:50:0:0:32:1
+action:S0:sprite_activate:1
+action:S0:sprite_deactivate:0
+enable:T0
+

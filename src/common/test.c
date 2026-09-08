@@ -169,15 +169,15 @@ int test()
 
     s0_att[0] = 0x8010000000070044;
 
-    uint16_t x = 0;
-    uint16_t y = 0;
-    uint16_t off = 0;
-    uint16_t flags = 0x8010;
+    //uint16_t x = 0;
+    //uint16_t y = 0;
+    //uint16_t off = 0;
+    //uint16_t flags = 0x8010;
 
-    uint64_t time;
+    //uint64_t time;
 
-    int x_dir = 0;
-    int y_dir = 0;
+    //int x_dir = 0;
+    //int y_dir = 0;
 
     // Enable all used layers
     uint32_t ctrl = 0;
@@ -187,4 +187,6 @@ int test()
             (1 << VDP_BIT_CTRL_B0_EN) |
             (1 << VDP_BIT_CTRL_B0_LC);
     r0[VDP_CTRL_REG] = ctrl;
+
+    return 0;
 }

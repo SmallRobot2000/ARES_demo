@@ -128,50 +128,40 @@ void cmd_load(char *scene_line, const char *filename, int line_num)
     }
 
     int x_off, y_off;
-
-    scene_line = strtok(NULL, ":"); // Get argument
-
-    if (scene_line == NULL)
-    {
-        printf("%s:%d: Invalid argument to command\n", filename, line_num);
-        free(fn);
-        return;
-    }
-
-    ret = sscanf(scene_line, "%d", &x_off);
-    if (ret != 1)
-    {
-        printf("%s:%d: Invalid argument to command\n", filename, line_num);
-        free(fn);
-        return;
-    }
-
-    scene_line = strtok(NULL, ":"); // Get argument
-
-    if (scene_line == NULL)
-    {
-        printf("%s:%d: Invalid argument to command\n", filename, line_num);
-        free(fn);
-        return;
-    }
-
-    ret = sscanf(scene_line, "%d", &y_off);
-    if (ret != 1)
-    {
-        printf("%s:%d: Invalid argument to command\n", filename, line_num);
-        free(fn);
-        return;
-    }
-
+    int load_pal, off, cnt;
     switch (layer)
     {
     case 0:
+        if (cmd_get_int_arg(scene_line, &x_off, filename, line_num) != 0)
+            return;
+        if (cmd_get_int_arg(scene_line, &y_off, filename, line_num) != 0)
+            return;
         if (vdp_b0_load_b0_file(fn, x_off, y_off))
         {
             printf("%s:%d: Error loading file\n", filename, line_num);
         }
         break;
-        // TODO: add T0 and T1 loading!
+    case 1:
+        // T0
+        if (cmd_get_int_arg(scene_line, &off, filename, line_num) != 0)
+            return;
+        if (cmd_get_int_arg(scene_line, &cnt, filename, line_num) != 0)
+            return;
+        if (cmd_get_int_arg(scene_line, &load_pal, filename, line_num) != 0)
+            return;
+        vdp_t0_load_til_file(fn, off, cnt, load_pal);
+        break;
+
+    case 2:
+        // T1
+        if (cmd_get_int_arg(scene_line, &off, filename, line_num) != 0)
+            return;
+        if (cmd_get_int_arg(scene_line, &cnt, filename, line_num) != 0)
+            return;
+        if (cmd_get_int_arg(scene_line, &load_pal, filename, line_num) != 0)
+            return;
+        vdp_t1_load_til_file(fn, off, cnt, load_pal);
+        break;
 
     default:
         break;
@@ -324,6 +314,8 @@ void do_sprite_action(char *scene_line, const char *filename, int line_num)
         action = 6;
     else if (strcmp(scene_line, "sprite_scale") == 0)
         action = 7;
+    else if (strcmp(scene_line, "sprite_frame") == 0)
+        action = 8;
     else
     {
         printf("%s:%d: Invalid argument to command\n", filename, line_num);
@@ -342,6 +334,8 @@ void do_sprite_action(char *scene_line, const char *filename, int line_num)
         return;
     }
     sprite_attribute_t spr_att;
+    int x_pos, y_pos, h_flip, v_flip, size, scale;
+    int x_delta, y_delta, frame, offset;
     switch (action)
     {
     case 1:
@@ -358,7 +352,7 @@ void do_sprite_action(char *scene_line, const char *filename, int line_num)
         break;
     case 3:
         //`sprite_set:<sprite number>:<x_pos>:<y_pos>:<h_flip 1 or 0>:<v_flip 1 or 0>:<size(16 or 32)>:<scale(0 - 3)>
-        int x_pos, y_pos, h_flip, v_flip, size, scale;
+
         if (cmd_get_int_arg(scene_line, &x_pos, filename, line_num))
         {
             return;
@@ -394,9 +388,97 @@ void do_sprite_action(char *scene_line, const char *filename, int line_num)
         spr_att.x_pos = x_pos;
         spr_att.y_pos = y_pos;
         spr_att.scale = scale;
-        spr_att.size = size;
+        spr_att.size = size == 32 ? 1 : 0;
         spr_att.h_flip = h_flip;
         spr_att.v_flip = v_flip;
+        vdp_s0_write_sprite_attribute(spr_att, spr_num);
+        break;
+
+    case 4:
+        // sprite_move
+
+        if (cmd_get_int_arg(scene_line, &x_delta, filename, line_num))
+        {
+            return;
+        }
+        if (cmd_get_int_arg(scene_line, &y_delta, filename, line_num))
+        {
+            return;
+        }
+        spr_att = vdp_s0_read_sprite_attribute(spr_num);
+        spr_att.x_pos += x_delta;
+        spr_att.y_pos += y_delta;
+        vdp_s0_write_sprite_attribute(spr_att, spr_num);
+        break;
+
+    case 5:
+        // sprite_h_flip
+        if (cmd_get_int_arg(scene_line, &h_flip, filename, line_num))
+        {
+            return;
+        }
+        if (h_flip != 0 && h_flip != 1)
+        {
+            printf("%s:%d: Invalid argument h_flip to command\n", filename, line_num);
+            return;
+        }
+        spr_att = vdp_s0_read_sprite_attribute(spr_num);
+        spr_att.h_flip = h_flip;
+        vdp_s0_write_sprite_attribute(spr_att, spr_num);
+        break;
+
+    case 6:
+        // sprite_v_flip
+        if (cmd_get_int_arg(scene_line, &v_flip, filename, line_num))
+        {
+            return;
+        }
+        if (v_flip != 0 && v_flip != 1)
+        {
+            printf("%s:%d: Invalid argument v_flip to command\n", filename, line_num);
+            return;
+        }
+        spr_att = vdp_s0_read_sprite_attribute(spr_num);
+        spr_att.v_flip = v_flip;
+        vdp_s0_write_sprite_attribute(spr_att, spr_num);
+        break;
+
+    case 7:
+        // sprite_scale
+        if (cmd_get_int_arg(scene_line, &scale, filename, line_num))
+        {
+            return;
+        }
+        if (scale < 0 || scale > 3)
+        {
+            printf("%s:%d: Invalid argument scale to command\n", filename, line_num);
+            return;
+        }
+        spr_att = vdp_s0_read_sprite_attribute(spr_num);
+        spr_att.scale = scale;
+        vdp_s0_write_sprite_attribute(spr_att, spr_num);
+        break;
+
+    case 8:
+        // sprite_frame
+        if (cmd_get_int_arg(scene_line, &offset, filename, line_num))
+        {
+            return;
+        }
+
+        if (cmd_get_int_arg(scene_line, &frame, filename, line_num))
+        {
+            return;
+        }
+        spr_att = vdp_s0_read_sprite_attribute(spr_num);
+        offset += frame * (spr_att.size * spr_att.size);
+        if (offset > 32768 - (spr_att.size * spr_att.size))
+        {
+            printf("%s:%d: Invalid argument offset or frame to command\n", filename, line_num);
+            return;
+        }
+
+        spr_att.offset = offset;
         vdp_s0_write_sprite_attribute(spr_att, spr_num);
         break;
     default:
@@ -622,7 +704,7 @@ int scener_run_file(const char *filename)
         new_text = line_end; // Next line
         new_text++;
 
-        printf("Line: %s\n", scene_line);
+        // printf("Line: %s\n", scene_line);
 
         // Chek what command
         scene_line = strtok(scene_line, ":");
