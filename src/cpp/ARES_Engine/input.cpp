@@ -18,8 +18,11 @@ namespace ARES_Engine
         return true;
     }
 
-    void Input::update()
+    void Input::update(bool enable_keyboard = true)
     {
+        if (!enable_keyboard)
+            return;
+
         // Pressed and released only last for one frame.
         m_keys_pressed.fill(false);
         m_keys_released.fill(false);

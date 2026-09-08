@@ -13,7 +13,7 @@ namespace ARES_Engine
 
         /// @brief Updates the state of all keyboard keys.
         /// @brief This should be called once per frame.
-        static void update();
+        static void update(bool enable_keyboard);
 
         /// @brief Checks whether a key is currently held down.
         /// @param key Linux KEY_* code.
@@ -24,11 +24,6 @@ namespace ARES_Engine
         /// @param key Linux KEY_* code.
         /// @return True if the key was pressed this frame.
         static bool is_key_pressed(int key);
-
-        /// @brief Checks whether a key was released during the current frame.
-        /// @param key Linux KEY_* code.
-        /// @return True if the key was released this frame.
-        static bool is_key_released(int key);
 
         /// @brief Checks whether a key was released during the current frame.
         /// @param key Linux KEY_* code.
