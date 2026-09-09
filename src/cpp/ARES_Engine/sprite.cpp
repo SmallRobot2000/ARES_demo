@@ -4,18 +4,63 @@ namespace ARES_Engine
 {
     bool Sprite::m_used_ids[64] = {};
 
+    Sprite::Sprite()
+    {
+        for (int i = 0; i < (int)(sizeof(m_used_ids) / sizeof(bool)); i++)
+        {
+            if (!m_used_ids[i]) // If this hardware sprite isn't used, occupy it
+            {
+
+                m_used_ids[i] = true;
+                this->id = i; // Save the ID that we occupied
+                break;
+            }
+        }
+
+        this->spr.active = 0;
+        this->spr.h_flip = 0;
+        this->spr.v_flip = 0;
+        this->spr.x_pos = 0;
+        this->spr.y_pos = 0;
+        this->spr.offset = 0;
+        this->spr.pal_num = 0;
+        this->spr.scale = 0;
+        this->spr.size = 0;
+
+        vdp_s0_write_sprite_attribute(this->spr, (uint16_t)this->id);
+    }
+
     void Sprite::set_position(const Vector2i &position)
     {
-        m_x = position.x;
-        m_y = position.y;
+        this->spr.x_pos = position.x;
+        this->spr.y_pos = position.y;
     }
-    void set_scale(uint8_t scale);
-    void set_flip(bool horizontal, bool vertical);
-    void set_palette(uint8_t palette);
-    void set_visible(bool visible);
+
+    void Sprite::update()
+    {
+        vdp_s0_write_sprite_attribute(this->spr, (uint16_t)this->id);
+    }
+
+    void Sprite::set_scale(uint8_t scale)
+    {
+        this->spr.scale = scale;
+    }
+    void Sprite::set_flip(bool horizontal, bool vertical)
+    {
+        this->spr.h_flip = horizontal ? 1 : 0;
+        this->spr.v_flip = vertical ? 1 : 0;
+    }
+    void Sprite::set_palette(uint8_t palette)
+    {
+        this->spr.pal_num = palette;
+    }
+    void Sprite::set_visible(bool visible)
+    {
+        this->spr.active = visible ? 1 : 0;
+    }
 
     bool Sprite::horizontal_flip() const
     {
-        return m_h_flip;
+        return this->spr.h_flip == 0 ? false : true;
     }
 }

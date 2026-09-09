@@ -143,6 +143,8 @@ extern "C"
     void vdp_s0_load_palette(const uint16_t *pal_data, size_t count, uint8_t pal_num);
     void vdp_s0_load_sprite_data(const uint8_t *spr_data, size_t size, uint32_t offset);
     void vdp_s0_write_sprite_attribute(sprite_attribute_t spr_att, uint16_t spr_num);
+
+    
     sprite_attribute_t vdp_s0_read_sprite_attribute(uint16_t spr_num);
     int vdp_s0_load_spr_file(const char *filename, uint32_t offset, uint8_t cnt, uint8_t pal_num, uint8_t sprite_size);
     int vdp_b0_load_b0_file(const char *filename, int x_off, int y_off);
