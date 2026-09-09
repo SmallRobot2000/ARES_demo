@@ -1,4 +1,5 @@
 #include <ARES_Engine/sprite.hpp>
+#include <stdexcept>
 
 namespace ARES_Engine
 {
@@ -16,6 +17,9 @@ namespace ARES_Engine
                 break;
             }
         }
+
+        if (this->id == -1) // No available sprite IDs
+            throw std::runtime_error("No available sprite IDs");
 
         this->spr.active = 0;
         this->spr.h_flip = 0;
@@ -41,7 +45,7 @@ namespace ARES_Engine
         vdp_s0_write_sprite_attribute(this->spr, (uint16_t)this->id);
     }
 
-    void Sprite::set_scale(uint8_t scale)
+    void Sprite::set_scale(uint8_t scale) // Change to enum 1x 2x 4x 8x
     {
         this->spr.scale = scale;
     }
@@ -50,7 +54,7 @@ namespace ARES_Engine
         this->spr.h_flip = horizontal ? 1 : 0;
         this->spr.v_flip = vertical ? 1 : 0;
     }
-    void Sprite::set_palette(uint8_t palette)
+    void Sprite::set_palette(uint8_t palette) // Change to enum 0-3
     {
         this->spr.pal_num = palette;
     }
@@ -59,7 +63,7 @@ namespace ARES_Engine
         this->spr.active = visible ? 1 : 0;
     }
 
-    bool Sprite::horizontal_flip() const
+    bool Sprite::get_horizontal_flip() const
     {
         return this->spr.h_flip == 0 ? false : true;
     }

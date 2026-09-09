@@ -19,28 +19,17 @@ namespace ARES_Engine
         void update(void);
 
         // Will not modify the Sprite object
-        int x() const;
-        int y() const;
+        int get_x() const;
+        int get_y() const;
 
-        uint8_t scale() const;
-        uint8_t palette() const;
+        uint8_t get_scale() const;
+        uint8_t get_palette() const;
 
-        bool horizontal_flip() const;
-        bool vertical_flip() const;
-        bool visible() const;
+        bool get_horizontal_flip() const;
+        bool get_vertical_flip() const;
+        bool get_visible() const;
 
     private:
-        // int *m_x;
-        // int *m_y;
-
-        // uint8_t *m_scale;
-        // uint8_t *m_palette;
-
-        // bool *m_h_flip;
-        // bool *m_v_flip;
-
-        // bool *m_visible;
-
         static bool m_used_ids[64];
         sprite_attribute_t spr;
         int id = -1;
