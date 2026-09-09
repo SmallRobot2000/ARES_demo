@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <ARES_Engine/math/vector2i.hpp>
 
 // TODO: add destructor
 namespace ARES_Engine
@@ -10,7 +11,7 @@ namespace ARES_Engine
     public:
         Sprite() = default;
 
-        void set_position(int x, int y); // USE VEC2
+        void set_position(const Vector2i &position);
         void set_scale(uint8_t scale);
         void set_flip(bool horizontal, bool vertical);
         void set_palette(uint8_t palette);

@@ -1,5 +1,4 @@
 // Temp include to know what has been made and what has not been made yet
-// Fix: cpp_include in the <...>
 #include <ARES_Engine/math/vector2i.hpp> //Vector2i
 #include <ARES_Engine/math/vector2f.hpp> //Vector2f
 #include <ARES_Engine/math/math.hpp>     //Math functions

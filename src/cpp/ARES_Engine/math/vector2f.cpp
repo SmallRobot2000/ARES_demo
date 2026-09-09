@@ -1,4 +1,3 @@
-// For some reason i need .vscode c_cpp_properties.json -HELP
 #include <ARES_Engine/math/vector2f.hpp>
 #include <cmath>
 

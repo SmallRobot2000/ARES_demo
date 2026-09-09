@@ -4,10 +4,10 @@ namespace ARES_Engine
 {
     bool Sprite::m_used_ids[64] = {};
 
-    void Sprite::set_position(int x, int y) // USE VEC2
+    void Sprite::set_position(const Vector2i &position)
     {
-        m_x = x;
-        m_y = y;
+        m_x = position.x;
+        m_y = position.y;
     }
     void set_scale(uint8_t scale);
     void set_flip(bool horizontal, bool vertical);
