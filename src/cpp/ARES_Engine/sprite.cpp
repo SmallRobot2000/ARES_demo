@@ -34,6 +34,13 @@ namespace ARES_Engine
         vdp_s0_write_sprite_attribute(this->spr, (uint16_t)this->id);
     }
 
+    Sprite::~Sprite()
+    {
+        Sprite::set_visible(false);
+        Sprite::update();
+        m_used_ids[this->id] = false;
+    }
+
     void Sprite::set_position(const Vector2i &position)
     {
         this->spr.x_pos = position.x;
@@ -67,4 +74,52 @@ namespace ARES_Engine
     {
         return this->spr.h_flip == 0 ? false : true;
     }
+
+    bool Sprite::get_vertical_flip() const
+    {
+        return this->spr.v_flip == 0 ? false : true;
+    }
+
+    int Sprite::get_x() const
+    {
+        return this->spr.x_pos;
+    }
+
+    int Sprite::get_y() const
+    {
+        return this->spr.y_pos;
+    }
+
+    uint8_t Sprite::get_scale() const
+    {
+        return this->spr.scale;
+    }
+
+    uint8_t Sprite::get_palette() const
+    {
+        return this->spr.pal_num;
+    }
+
+    bool Sprite::get_visible() const
+    {
+        return this->spr.active == 1 ? true : false;
+    }
+
+    uint8_t Sprite::get_remaining_ids()
+    {
+        int ret = 0;
+        for (bool var : m_used_ids)
+        {
+            if (var == false)
+                ret++;
+        }
+
+        return ret;
+    }
+
+    Vector2i Sprite::get_position() const
+    {
+        return Vector2i((int)this->spr.x_pos, (int)this->spr.y_pos);
+    }
+
 }
