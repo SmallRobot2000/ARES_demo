@@ -14,6 +14,7 @@
 
 SRC_DIR     := src
 INC_DIR     := include
+INC_DIR_CPP := include/cpp_include
 BUILD_DIR   := build
 
 COMMON_DIR  := $(SRC_DIR)/common
@@ -44,11 +45,13 @@ SIM_CXX := g++
 
 HW_CPPFLAGS := \
 	-DARES_HW \
-	-I$(INC_DIR)
+	-I$(INC_DIR) \
+	-I$(INC_DIR_CPP)
 
 SIM_CPPFLAGS := \
 	-DARES_SIM \
-	-I$(INC_DIR)
+	-I$(INC_DIR) \
+	-I$(INC_DIR_CPP)
 
 
 # ------------------------------------------------------------

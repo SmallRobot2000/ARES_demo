@@ -1,5 +1,5 @@
 // For some reason i need .vscode c_cpp_properties.json -HELP
-#include <cpp_include/ARES_Engine/math/vector2i.hpp>
+#include <ARES_Engine/math/vector2i.hpp>
 #include <cmath>
 
 namespace ARES_Engine

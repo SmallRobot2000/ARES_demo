@@ -5,7 +5,7 @@
       "compilerPath": "/usr/bin/gcc",
       "cStandard": "c11",
       "cppStandard": "c++17",
-      "includePath": ["${workspaceFolder}/include", "${workspaceFolder}/src"]
+      "includePath": ["${workspaceFolder}/include", "${workspaceFolder}/include/cpp_include", "${workspaceFolder}/src"]
     }
   ],
   "version": 4

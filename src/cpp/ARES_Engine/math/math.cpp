@@ -1,5 +1,5 @@
 #include <cmath>
-#include <cpp_include/ARES_Engine/math/math.hpp>
+#include <ARES_Engine/math/math.hpp>
 
 namespace ARES_Engine
 {
