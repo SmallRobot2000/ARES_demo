@@ -4,12 +4,16 @@
 #include <ARES_Engine/math/math.hpp>     //Math functions
 
 // Math ඞ
-// Color - bitmap only
-// Sprite
-// Renderer
-// Engine
-// Input
+// Collision -> Math
+// Color - bitmap only (struct) ARGB4444 uint16_t
+// Bitmap
+// Tilemap
+// Sprite - almost dun ඞ - add collision on/off
+// Engine - layer on/off, file loading
+// Input ඞ
 // Test
+// World - very later
+// Animation - very very later
 
 // CTRL + K + C to comment selected lines
 // CTRL + K + U to uncomment selected lines
