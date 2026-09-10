@@ -143,7 +143,7 @@ void start(int argc, char **argv)
     */
     spr.x_pos = 16;
     spr.y_pos = 16;
-    spr.offset = 0;
+    spr.offset = 1;
     spr.h_flip = 0;
     spr.v_flip = 0;
     spr.pal_num = 0;
@@ -218,7 +218,7 @@ void start(int argc, char **argv)
     vdp_bg_set_color(0x0000);
     // vdp_b0_disable();
     printf("Loading .spr\n");
-    int err = vdp_s0_load_spr_file("assets/test.spr", 0, 1, 0, 1); // Overwrite smile
+    int err = vdp_s0_load_spr_file("assets/test.spr", 16, 1, 0, 1); // Overwrite smile
     if (err)
         printf("Failed to laod .spr\n");
 
@@ -241,7 +241,6 @@ void start(int argc, char **argv)
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     printf("\n");
     printf("Execution Time: %llu microseconds\n", (unsigned long long)duration.count());
-
     scener_run_file("assets/scene.sen");
 }
 

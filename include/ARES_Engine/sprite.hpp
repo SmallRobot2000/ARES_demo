@@ -18,7 +18,7 @@ namespace ARES_Engine
         void set_flip(bool horizontal, bool vertical);
         void set_palette(uint8_t palette);
         void set_visible(bool visible);
-        void set_frame(uint8_t frame_number);
+        void set_frame(uint8_t frame_id);
         void set_size(uint8_t pixel_size);
         void update(void);
 

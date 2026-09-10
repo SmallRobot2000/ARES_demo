@@ -65,10 +65,10 @@ namespace ARES_Engine
     {
         this->spr.pal_num = palette;
     }
-    void Sprite::set_frame(uint8_t frame_number)
+    void Sprite::set_frame(uint8_t frame_id)
     {
-        int siz = this->spr.size == 0 ? 16 : 32;
-        this->spr.offset = frame_number * (siz * siz);
+
+        this->spr.offset = frame_id * (16 * 16); //Frame ids are aligned to 16x16 sprite ids
     }
 
     void Sprite::set_size(uint8_t pixel_size)

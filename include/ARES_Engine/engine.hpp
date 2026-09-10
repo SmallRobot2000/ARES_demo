@@ -1,27 +1,15 @@
 #pragma once
-
+#include <vector>
+#include <string>
+#include <filesystem>
 namespace ARES_Engine
 {
-
+    //TODO: in Engine() add a 1 in 1000000 chance of throw error Deez nuts
     class Engine
     {
     public:
         Engine();
         ~Engine();
-
-        void initialize();
-
-        // Logic id (16px 32px)
-
-        void load_sprite_data(); // returns id array
-        void load_tile_data();
-        void load_tilemap();
-        void load_bitmap_data();
-
-        void unload_sprite_data();
-
-        void enable_layer();  // Enum for layers
-        void disable_layer(); // Enum for layers
 
         enum Layer
         {
@@ -30,5 +18,30 @@ namespace ARES_Engine
             Tile1,
             Bitmap
         };
+
+        struct Frame
+        {
+            uint8_t size;
+            uint8_t hw_ids[4];
+        };
+
+        void initialize();
+
+        // Logic id (16px 32px)
+
+        std::vector<Engine::Frame> load_sprite_data(std::filesystem::path filename); // returns frame array
+        void load_tile_data();
+        void load_tilemap();
+        void load_bitmap_data();
+
+        void free_sprite_data(std::vector<Engine::Frame> &array);
+
+        void unload_sprite_data();
+
+        void enable_layer(Engine::Layer layer);
+        void disable_layer(Engine::Layer layer);
+
+    
+        static bool _sprite_hw_id_used[128];
     };
 }
