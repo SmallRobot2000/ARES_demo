@@ -31,6 +31,7 @@ namespace ARES_Engine
         {
             m_keys_pressed[i] = false;
             m_keys_released[i] = false;
+            m_keys_down[i] = false;
         }
 
         keyboard_event_t event;
@@ -42,6 +43,11 @@ namespace ARES_Engine
 
             switch (event.value)
             {
+            case 0:
+                // Key released.
+                m_keys_down[event.key] = false;
+                m_keys_released[event.key] = true;
+                break;
             case 1:
                 // Key pressed.
                 m_keys_down[event.key] = true;
@@ -51,12 +57,6 @@ namespace ARES_Engine
             case 2:
                 // Key repeat.
                 m_keys_down[event.key] = true;
-                break;
-
-            case 0:
-                // Key released.
-                m_keys_down[event.key] = false;
-                m_keys_released[event.key] = true;
                 break;
 
             default:
