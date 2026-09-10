@@ -6,6 +6,7 @@
 // TODO: add destructor
 namespace ARES_Engine
 {
+
     class Sprite
     {
     public:
