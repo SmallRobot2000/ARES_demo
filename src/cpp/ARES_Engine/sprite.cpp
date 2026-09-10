@@ -65,6 +65,16 @@ namespace ARES_Engine
     {
         this->spr.pal_num = palette;
     }
+    void Sprite::set_frame(uint8_t frame_number)
+    {
+        int siz = this->spr.size == 0 ? 16 : 32;
+        this->spr.offset = frame_number * (siz * siz);
+    }
+
+    void Sprite::set_size(uint8_t pixel_size)
+    {
+        this->spr.size = pixel_size == 16 ? 0 : 1;
+    }
     void Sprite::set_visible(bool visible)
     {
         this->spr.active = visible ? 1 : 0;
@@ -120,6 +130,11 @@ namespace ARES_Engine
     Vector2i Sprite::get_position() const
     {
         return Vector2i((int)this->spr.x_pos, (int)this->spr.y_pos);
+    }
+
+    uint8_t Sprite::get_size() const
+    {
+        return this->spr.size == 1 ? 32 : 16;
     }
 
 }

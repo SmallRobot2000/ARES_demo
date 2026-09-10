@@ -17,7 +17,8 @@ namespace ARES_Engine
         void set_flip(bool horizontal, bool vertical);
         void set_palette(uint8_t palette);
         void set_visible(bool visible);
-        void set_frame(); //TODO: Add latter mjenja memsmldsan znas sto sam mislio
+        void set_frame(uint8_t frame_number);
+        void set_size(uint8_t pixel_size);
         void update(void);
 
         // Will not modify the Sprite object
@@ -32,6 +33,7 @@ namespace ARES_Engine
         bool get_horizontal_flip() const;
         bool get_vertical_flip() const;
         bool get_visible() const;
+        uint8_t get_size() const;
 
         static uint8_t get_remaining_ids();
 
