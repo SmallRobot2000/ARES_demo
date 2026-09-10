@@ -282,6 +282,12 @@ void loop()
 
     auto color = ARES_Engine::Bitmap::Color::Blue;
     ARES_Engine::Bitmap::set_pixel(pos, color);
+
+     while (vdp_is_v_blank());
+     while (!vdp_is_v_blank());
+     while (vdp_is_v_blank());
+    //     ;
+    // while (!vdp_is_v_blank())
     // if (keyboard_get_event(&ev) == 1)
     // {
     //     if (ev.key == KEY_D)

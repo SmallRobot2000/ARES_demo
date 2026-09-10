@@ -31,7 +31,6 @@ namespace ARES_Engine
         {
             m_keys_pressed[i] = false;
             m_keys_released[i] = false;
-            m_keys_down[i] = false;
         }
 
         keyboard_event_t event;
