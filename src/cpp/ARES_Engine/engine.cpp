@@ -11,7 +11,6 @@ namespace ARES_Engine
 
     bool Engine::_sprite_hw_id_used[128] = {};
 
-
     void enable_layer(Engine::Layer layer)
     {
         switch (layer)
@@ -114,6 +113,14 @@ namespace ARES_Engine
             throw std::runtime_error("Alas, the file's form is wrong. [Wrong file format]");
 
         frame.size = sprite_size;
+
+        if (sprite_size != 16 && sprite_size != 32)
+            throw std::runtime_error("Alas, the file's sprite is of an ill-sized form. [File has wrong sprite size]");
+
+        uint16_t spr_cnt = (uint16_t)header[SPR_SPRCNT_OFF] + 1;
+
+        if (spr_cnt < 0 || spr_cnt > 63)
+            throw std::runtime_error("Alas, the sprites are too many in number. [Too many sprites]");
 
         frames.push_back(frame);
 
