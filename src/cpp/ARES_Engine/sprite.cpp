@@ -30,8 +30,6 @@ namespace ARES_Engine
         this->spr.pal_num = 0;
         this->spr.scale = 0;
         this->spr.size = 0;
-
-        vdp_s0_write_sprite_attribute(this->spr, (uint16_t)this->id);
     }
 
     Sprite::~Sprite()

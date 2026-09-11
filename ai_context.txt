@@ -9,6 +9,8 @@
 #include <ARES_Engine/engine.hpp>        //Engine
 #include <ARES_Engine/sprite.hpp>        //Sprite
 
+#include <app.h> //IMPORTANT
+
 main.cpp
 
 void start(int argc, char **argv){}
