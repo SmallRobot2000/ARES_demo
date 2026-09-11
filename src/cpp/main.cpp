@@ -4,6 +4,7 @@
 #include <ARES_Engine/math/math.hpp>     //Math functions
 #include <ARES_Engine/bitmap.hpp>        //Bitmap
 #include <ARES_Engine/input.hpp>         //Input
+#include <ARES_Engine/engine.hpp>
 
 // Math ඞ
 // Collision -> Math
@@ -142,6 +143,8 @@ void start(int argc, char **argv)
 
     if (!ARES_Engine::Input::initialize())
         return;
+
+    std::vector<ARES_Engine::Engine::Frame> loaded_frames = ARES_Engine::Engine::load_sprite_data("alo");
 
     // for (int i = 0; i < 1024 * 1024; i++)
     // {

@@ -4,7 +4,7 @@
 #include <filesystem>
 namespace ARES_Engine
 {
-    //TODO: in Engine() add a 1 in 1000000 chance of throw error Deez nuts
+    // TODO: in Engine() add a 1 in 1000000 chance of throw error Deez nuts
     class Engine
     {
     public:
@@ -29,7 +29,7 @@ namespace ARES_Engine
 
         // Logic id (16px 32px)
 
-        std::vector<Engine::Frame> load_sprite_data(std::filesystem::path filename); // returns frame array
+        static std::vector<Engine::Frame> load_sprite_data(std::filesystem::path filename); // returns frame array
         void load_tile_data();
         void load_tilemap();
         void load_bitmap_data();
@@ -41,7 +41,7 @@ namespace ARES_Engine
         void enable_layer(Engine::Layer layer);
         void disable_layer(Engine::Layer layer);
 
-    
-        static bool _sprite_hw_id_used[128];
+        #define MAX_HW_ID 128
+        static bool _sprite_hw_id_used[MAX_HW_ID];
     };
 }
