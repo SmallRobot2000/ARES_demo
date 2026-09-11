@@ -1,0 +1,7 @@
+# Build directory
+/build/*
+!/build/.gitkeep
+
+# Compiled executables
+/main_sim
+/main_hw
