@@ -1,0 +1,419 @@
+11.9.2026. 23:11
+
+#include <ARES_Engine/math/vector2i.hpp> //Vector2i
+#include <ARES_Engine/math/vector2f.hpp> //Vector2f
+#include <ARES_Engine/math/math.hpp>     //Math functions
+#include <ARES_Engine/bitmap/bitmap.hpp> //Bitmap
+#include <ARES_Engine/bitmap/color.hpp>  //Color
+#include <ARES_Engine/input.hpp>         //Input
+#include <ARES_Engine/engine.hpp>        //Engine
+#include <ARES_Engine/sprite.hpp>        //Sprite
+
+#include <app.h> //IMPORTANT
+
+main.cpp
+
+void start(int argc, char **argv){}
+void loop(){} - to wait for a frame needs at start or end of loop():
+    while (vdp_is_v_blank())
+        ;
+    while (!vdp_is_v_blank())
+        ;
+    while (vdp_is_v_blank())
+        ;
+
+#pragma once
+#include <ARES_Engine/math/vector2f.hpp>
+
+namespace ARES_Engine
+{
+    struct Vector2i
+    {
+        int x = 0;
+        int y = 0;
+
+        Vector2i() = default;
+        Vector2i(int x, int y) : x(x), y(y) {}
+
+        /// @brief Calculates the length (magnitude) of the vector.
+        /// @return The length of the vector.
+        float length() const;
+
+        /// @brief Calculates the squared length (magnitude) of the vector.
+        /// This avoids the square root calculation performed by length().
+        /// @return The squared length of the vector.
+        float length_squared() const;
+
+        /// @brief Returns a normalized copy of this vector.
+        /// A normalized vector has a length of 1 while preserving the original direction.
+        /// @return The normalized vector as a ARES_Engine::Vector2f.
+        Vector2f normalized() const;
+
+        /// @brief Calculates the dot product between two vectors.
+        /// @param other Vector to calculate the dot product with.
+        /// @return The dot product of the two vectors.
+        int dot(const Vector2i &other) const;
+
+        /// @brief Calculates the distance between two vectors.
+        /// @param a First vector.
+        /// @param b Second vector.
+        /// @return The distance between the two vectors.
+        static float distance(const Vector2i &a, const Vector2i &b);
+
+        Vector2i operator+(const Vector2i &other) const;
+        Vector2i operator-(const Vector2i &other) const;
+
+        Vector2i operator*(int scalar) const;
+        Vector2i operator/(int scalar) const;
+
+        Vector2i &operator+=(const Vector2i &other);
+        Vector2i &operator-=(const Vector2i &other);
+
+        Vector2i &operator*=(int scalar);
+        Vector2i &operator/=(int scalar);
+    };
+}
+
+#pragma once
+
+namespace ARES_Engine
+{
+    struct Vector2f
+    {
+        float x = 0.0f;
+        float y = 0.0f;
+
+        Vector2f() = default;
+        Vector2f(float x, float y) : x(x), y(y) {}
+
+        /// @brief Calculates the length (magnitude) of the vector.
+        /// @return The length of the vector.
+        float length() const;
+
+        /// @brief Calculates the squared length (magnitude) of the vector.
+        /// This avoids the square root calculation performed by length().
+        /// @return The squared length of the vector.
+        float length_squared() const;
+
+        /// @brief Returns a normalized copy of this vector.
+        /// A normalized vector has a length of 1 while preserving the original direction.
+        /// @return The normalized vector.
+        Vector2f normalized() const;
+
+        /// @brief Calculates the dot product between two vectors.
+        /// @param other Vector to calculate the dot product with.
+        /// @return The dot product of the two vectors.
+        float dot(const Vector2f &other) const;
+
+        /// @brief Calculates the distance between two vectors.
+        /// @param a First vector.
+        /// @param b Second vector.
+        /// @return The distance between the two vectors.
+        static float distance(const Vector2f &a, const Vector2f &b);
+
+        Vector2f operator+(const Vector2f &other) const;
+        Vector2f operator-(const Vector2f &other) const;
+
+        Vector2f operator*(float scalar) const;
+        Vector2f operator/(float scalar) const;
+
+        Vector2f &operator+=(const Vector2f &other);
+        Vector2f &operator-=(const Vector2f &other);
+
+        Vector2f &operator*=(float scalar);
+        Vector2f &operator/=(float scalar);
+    };
+}
+
+#pragma once
+#include <cstdint>
+
+namespace ARES_Engine
+{
+    constexpr float PI = 3.14159265358979323846f;
+
+    /// @brief Clamps a value between a minimum and maximum.
+    /// @param value Value to clamp.
+    /// @param min Minimum allowed value.
+    /// @param max Maximum allowed value.
+    /// @return The clamped value.
+    float clamp(float value, float min, float max);
+
+    /// @brief Returns the smaller of two values.
+    /// @param a First value.
+    /// @param b Second value.
+    /// @return The smaller value.
+    float min(float a, float b);
+
+    /// @brief Returns the larger of two values.
+    ///
+    /// @param a First value.
+    /// @param b Second value.
+    /// @return The larger value.
+    float max(float a, float b);
+
+    /// @brief Linearly interpolates between two values.
+    /// @param a Starting value.
+    /// @param b Ending value.
+    /// @param t Interpolation amount.
+    /// @return The interpolated value.
+    float lerp(float a, float b, float t);
+
+    /// @brief Converts an angle from degrees to radians.
+    /// @param degrees Angle in degrees.
+    /// @return Angle in radians.
+    float degrees_to_radians(float degrees);
+
+    /// @brief Converts an angle from radians to degrees.
+    ///
+    /// @param radians Angle in radians.
+    /// @return Angle in degrees.
+    float radians_to_degrees(float radians);
+
+    /// @brief Maps a value from one range to another.
+    /// @param value Value to map.
+    /// @param input_min Minimum of the input range.
+    /// @param input_max Maximum of the input range.
+    /// @param output_min Minimum of the output range.
+    /// @param output_max Maximum of the output range.
+    /// @return The value mapped to the output range.
+    float map(
+        float value,
+        float input_min,
+        float input_max,
+        float output_min,
+        float output_max);
+
+}
+
+#pragma once
+#include <ARES_Engine/math/math.hpp>
+#include <ARES_Engine/math/vector2i.hpp>
+#include <ARES_Engine/bitmap/color.hpp>
+
+namespace ARES_Engine::Bitmap
+{
+    void set_pixel(const Vector2i &position, const Color &color);
+    Color get_pixel(const Vector2i &position);
+
+    void set_rectangle(
+        const Vector2i &start_point,
+        const Vector2i &end_point,
+        const Color &color);
+    void set_line( // May god help us and the compiler
+        const Vector2i &start_point,
+        const Vector2i &end_point,
+        const Color &color);
+
+    void set_scrollX(int scrollX); //Not yet implemented
+    void set_scrollY(int scrollY); //Not yet implemented
+
+    void load_image(); //Not yet implemented
+
+    int get_scrollX(); //Not yet implemented
+    int get_scrollY(); //Not yet implemented
+}
+
+#pragma once
+#include <ARES_Engine/math/math.hpp>
+
+namespace ARES_Engine::Bitmap
+{
+    struct Color
+    {
+        uint8_t a; // 0-15
+        uint8_t r; // 0-15
+        uint8_t g; // 0-15
+        uint8_t b; // 0-15
+
+        Color(
+            uint8_t alpha,
+            uint8_t red,
+            uint8_t green,
+            uint8_t blue)
+        {
+            a = clamp(alpha, 0, 15);
+            r = clamp(red, 0, 15);
+            g = clamp(green, 0, 15);
+            b = clamp(blue, 0, 15);
+        }
+
+        Color(uint16_t value)
+        {
+            a = (value >> 12) & 0xF;
+            r = (value >> 8) & 0xF;
+            g = (value >> 4) & 0xF;
+            b = value & 0xF;
+        }
+
+        Color() : r(0), g(0), b(0), a(0) {}
+
+        uint16_t get_value() const;
+
+        static const Color Transparent;
+        static const Color Black;
+        static const Color White;
+        static const Color Red;
+        static const Color Green;
+        static const Color Blue;
+        static const Color Yellow;
+        static const Color Cyan;
+        static const Color Magenta;
+        static const Color Gray;
+    };
+}
+
+#include <linux/input.h>
+#include <array>
+#include <kbd.h>
+
+namespace ARES_Engine
+{
+    class Input
+    {
+    public:
+        /// @brief Initializes the keyboard input system.
+        /// @return True if initialization succeeded, false otherwise.
+        static bool initialize();
+
+        /// @brief Updates the state of all keyboard keys.
+        /// @brief This should be called once per frame.
+        static void update(bool enable_keyboard);
+
+        /// @brief Checks whether a key is currently held down.
+        /// @param key Linux KEY_* code.
+        /// @return True if the key is currently held.
+        static bool is_key_down(int key);
+
+        /// @brief Checks whether a key was pressed during the current frame.
+        /// @param key Linux KEY_* code.
+        /// @return True if the key was pressed this frame.
+        static bool is_key_pressed(int key);
+
+        /// @brief Checks whether a key was released during the current frame.
+        /// @param key Linux KEY_* code.
+        /// @return True if the key was released this frame.
+        static bool is_key_released(int key);
+
+    private:
+        // Internal state for key tracking
+        // KEY_MAX is defined in linux/input.h and represents the maximum key code value.
+        static std::array<bool, KEY_MAX + 1> m_keys_down;
+        static std::array<bool, KEY_MAX + 1> m_keys_pressed;
+        static std::array<bool, KEY_MAX + 1> m_keys_released;
+    };
+}
+#pragma once
+#include <vector>
+#include <string>
+#include <filesystem>
+
+#define MAX_HW_ID 128
+
+namespace ARES_Engine::Engine
+{
+    // TODO: add a 1 in 1000000 chance of throw error Deez nuts
+
+    enum Layer
+    {
+        Sprite,
+        Tile0,
+        Tile1,
+        Bitmap
+    };
+
+    struct Frame
+    {
+        uint8_t size;
+        uint8_t hw_ids[4];
+    };
+
+    void initialize();
+
+    // Logic id (16px 32px)
+
+    std::vector<Engine::Frame> load_sprite_data(std::filesystem::path filename); // Loads .spr and returns frame array
+    void load_sprite_palette(std::filesystem::path filename);                    // Loads .pal
+    void load_tile_data();
+    void load_tilemap();
+    void load_bitmap_data();
+
+    void free_sprite_data(std::vector<Engine::Frame> &array);
+
+    void unload_sprite_data();
+
+    void enable_layer(Engine::Layer layer);
+    void disable_layer(Engine::Layer layer);
+
+    inline bool _sprite_hw_id_used[128] = {};
+
+}
+#pragma once
+
+#include <cstdint>
+#include <ARES_Engine/math/vector2i.hpp>
+#include <vdp_api.h>
+// TODO: add destructor
+namespace ARES_Engine
+{
+
+    class Sprite
+    {
+    public:
+        Sprite();
+        ~Sprite();
+
+        enum class Scale
+        {
+            x1 = 0,
+            x2 = 1,
+            x4 = 2,
+            x8 = 3
+        };
+
+        enum class Size
+        {
+            x16 = 0,
+            x32 = 1
+        };
+
+        enum class Palette
+        {
+            Pal_0 = 0,
+            Pal_1 = 1,
+            Pal_2 = 2,
+            Pal_3 = 3
+        };
+
+        void set_position(const Vector2i &position);
+        void set_scale(Scale scale);
+        void set_flip(bool horizontal, bool vertical);
+        void set_palette(Palette palette);
+        void set_visible(bool visible);
+        void set_frame(uint8_t frame_id);
+        void set_size(Size pixel_size);
+        void update(void);
+
+        // Will not modify the Sprite object
+        int get_x() const;
+        int get_y() const;
+
+        Vector2i get_position() const;
+
+        Scale get_scale() const;
+        Palette get_palette() const;
+        Size get_size() const;
+
+        bool get_horizontal_flip() const;
+        bool get_vertical_flip() const;
+        bool get_visible() const;
+
+        static uint8_t get_remaining_ids();
+
+    private:
+        static bool m_used_ids[64];
+        sprite_attribute_t spr;
+        int id = -1;
+    };
+
+}
