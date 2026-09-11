@@ -135,9 +135,8 @@ ARES_Engine::Sprite *spr;
 void start(int argc, char **argv)
 {
 
-    vdp_b0_enable();
-    vdp_s0_enable();
-    // vdp_b0_enable_linux_mode();
+    ARES_Engine::Engine::enable_layer(ARES_Engine::Engine::Bitmap);
+    ARES_Engine::Engine::enable_layer(ARES_Engine::Engine::Sprite);
 
     auto start_point = ARES_Engine::Vector2i(100, 100);
     auto end_point = ARES_Engine::Vector2i(200, 200);
@@ -152,21 +151,17 @@ void start(int argc, char **argv)
     ARES_Engine::Engine::load_sprite_palette("./assets/test1.pal");
     printf("Frame[0] = %d", loaded_frames[0].hw_ids[1]);
 
-    vdp_s0_enable();
     spr = new ARES_Engine::Sprite();
 
     spr->set_visible(true);
     spr->set_frame(0);
-    spr->set_scale(2);
-    spr->set_palette(0);
-    spr->set_size(32);
+    spr->set_scale(ARES_Engine::Sprite::Scale::x2);
+    spr->set_palette(ARES_Engine::Sprite::Palette::Pal_0);
+    spr->set_size(ARES_Engine::Sprite::Size::x32);
     spr->set_position(ARES_Engine::Vector2i(32, 32));
     spr->update();
 
-    for (int i = 0; i < 2; i++)
-    {
-        printf("Fucking spr data rawwsadas.,mndaskmnldbhnaskjbdaskh: %lx\n", s0_att[i]);
-    }
+
 
     // ARES_Engine::Engine::free_sprite_data(loaded_frames);
     //  for (int i = 0; i < 1024 * 1024; i++)

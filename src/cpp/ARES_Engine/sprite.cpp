@@ -52,28 +52,28 @@ namespace ARES_Engine
         vdp_s0_write_sprite_attribute(this->spr, (uint16_t)this->id);
     }
 
-    void Sprite::set_scale(uint8_t scale) // Change to enum 1x 2x 4x 8x
+    void Sprite::set_scale(Scale scale) // Change to enum 1x 2x 4x 8x
     {
-        this->spr.scale = scale;
+        this->spr.scale = (uint8_t)scale;
     }
     void Sprite::set_flip(bool horizontal, bool vertical)
     {
         this->spr.h_flip = horizontal ? 1 : 0;
         this->spr.v_flip = vertical ? 1 : 0;
     }
-    void Sprite::set_palette(uint8_t palette) // Change to enum 0-3
+    void Sprite::set_palette(Palette palette) // Change to enum 0-3
     {
-        this->spr.pal_num = palette;
+        this->spr.pal_num = (uint8_t)palette;
     }
     void Sprite::set_frame(uint8_t frame_id)
     {
 
-        this->spr.offset = frame_id * (16 * 16); //Frame ids are aligned to 16x16 sprite ids
+        this->spr.offset = frame_id * (16 * 16); // Frame ids are aligned to 16x16 sprite ids
     }
 
-    void Sprite::set_size(uint8_t pixel_size)
+    void Sprite::set_size(Size pixel_size)
     {
-        this->spr.size = pixel_size == 16 ? 0 : 1;
+        this->spr.size = (uint8_t)pixel_size;
     }
     void Sprite::set_visible(bool visible)
     {
@@ -100,14 +100,19 @@ namespace ARES_Engine
         return this->spr.y_pos;
     }
 
-    uint8_t Sprite::get_scale() const
+    Sprite::Scale Sprite::get_scale() const
     {
-        return this->spr.scale;
+        return (Scale)this->spr.scale;
     }
 
-    uint8_t Sprite::get_palette() const
+    Sprite::Palette Sprite::get_palette() const
     {
-        return this->spr.pal_num;
+        return (Palette)this->spr.pal_num;
+    }
+
+    Sprite::Size Sprite::get_size() const
+    {
+        return (Size)(this->spr.size == 1 ? 32 : 16);
     }
 
     bool Sprite::get_visible() const
@@ -130,11 +135,6 @@ namespace ARES_Engine
     Vector2i Sprite::get_position() const
     {
         return Vector2i((int)this->spr.x_pos, (int)this->spr.y_pos);
-    }
-
-    uint8_t Sprite::get_size() const
-    {
-        return this->spr.size == 1 ? 32 : 16;
     }
 
 }

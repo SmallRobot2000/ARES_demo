@@ -228,7 +228,6 @@ namespace ARES_Engine::Engine
             int r, g, b;
             iss >> r >> g >> b;
 
-            printf("r: %d g: %d b: %d \n", r, g, b);
             uint16_t argb = 0xF000;
             argb |= ((r & 0xF0) >> 4) << 8;
             argb |= ((g & 0xF0) >> 4) << 4;
