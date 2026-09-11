@@ -27,7 +27,8 @@ namespace ARES_Engine::Engine
 
     // Logic id (16px 32px)
 
-    std::vector<Engine::Frame> load_sprite_data(std::filesystem::path filename); // returns frame array
+    std::vector<Engine::Frame> load_sprite_data(std::filesystem::path filename); // Loads .spr and returns frame array
+    void load_sprite_palette(std::filesystem::path filename);                    // Loads .pal
     void load_tile_data();
     void load_tilemap();
     void load_bitmap_data();

@@ -6,9 +6,8 @@
 #include <string.h>
 namespace fs = std::filesystem;
 
-namespace ARES_Engine
+namespace ARES_Engine::Engine
 {
-
 
     void enable_layer(Engine::Layer layer)
     {
@@ -60,7 +59,7 @@ namespace ARES_Engine
         }
     }
 
-    void Engine::free_sprite_data(std::vector<Engine::Frame> &array)
+    void free_sprite_data(std::vector<Engine::Frame> &array)
     {
 
         for (auto var : array)
@@ -82,7 +81,7 @@ namespace ARES_Engine
         array.clear();
     }
 
-    std::vector<Engine::Frame> Engine::load_sprite_data(std::filesystem::path filename)
+    std::vector<Engine::Frame> load_sprite_data(std::filesystem::path filename)
     {
 
         if (!fs::exists(filename) || !fs::is_regular_file(filename))
@@ -160,30 +159,87 @@ namespace ARES_Engine
                     hw_id = n;
                     break;
                 }
-                if (hw_id == -1)
-                {
-                    free(sprite_data);
-                    throw std::runtime_error("Fie, the sprite-memory doth overflow its bounds, and now stands empty of room. [Out of sprite data memory]");
-                }
+            }
+            if (hw_id == -1)
+            {
+                free(sprite_data);
+                throw std::runtime_error("Fie, the sprite-memory doth overflow its bounds, and now stands empty of room. [Out of sprite data memory]");
+            }
 
-                vdp_s0_load_sprite_data(&sprite_data[i * (16 * 16)], 16 * 16, n * (16 * 16));
+            vdp_s0_load_sprite_data(&sprite_data[i * (16 * 16)], 16 * 16, hw_id * (16 * 16));
 
-                if (sprite_size == 16)
+            if (sprite_size == 16)
+            {
+                frame.hw_ids[0] = hw_id;
+                frames.push_back(frame);
+            }
+            else
+            {                                // 32
+                frame.hw_ids[i % 4] = hw_id; // One of four frames inside one sprite
+                if (i % 4 == 3)              // Last frame of four frames for one sprite
                 {
-                    frame.hw_ids[0] = n;
                     frames.push_back(frame);
-                }
-                else
-                {                            // 32
-                    frame.hw_ids[i % 4] = n; // One of four frames inside one sprite
-                    if (i % 4 == 3)          // Last frame of four frames for one sprite
-                    {
-                        frames.push_back(frame);
-                    }
                 }
             }
         }
         free(sprite_data);
         return frames;
+    }
+
+    void load_sprite_palette(std::filesystem::path filename)
+    {
+        if (!fs::exists(filename) || !fs::is_regular_file(filename))
+            throw std::runtime_error("Lo, this path is erroneous; it leadeth nowhere true [This path is invalid]");
+
+        std::ifstream file(filename, std::ios::in);
+
+        if (!file)
+            throw std::runtime_error("The file, loath to be disturbed, would not unfold itself. [Coudnt open file]");
+
+        std::string str;
+
+        if (!std::getline(file, str))
+            throw std::runtime_error("Alas, this scroll is no true palette; its contents mock the artist's intent. [The file is not a valid palette file]");
+
+        if (str.compare("JASC-PAL") != 0)
+            throw std::runtime_error("Alas, this scroll is no true palette; its contents mock the artist's intent. [The file is not a valid palette file]");
+
+        if (!std::getline(file, str))
+            throw std::runtime_error("Alas, this scroll is no true palette; its contents mock the artist's intent. [The file is not a valid palette file]");
+
+        // We dont care for the version
+        if (!std::getline(file, str))
+            throw std::runtime_error("Alas, this scroll is no true palette; its contents mock the artist's intent. [The file is not a valid palette file]");
+
+        int col_cnt = std::stoi(str);
+
+        if (col_cnt < 0 || col_cnt > 256)
+            throw std::runtime_error("Alas, the palette swelleth beyond its due; too many colours for the frame to hold. [Too many colors in palette]");
+
+        // We only use palette 0
+        uint16_t pal[256];
+        for (int i = 0; i < col_cnt; i++)
+        {
+            if (!std::getline(file, str))
+                throw std::runtime_error("Alas, this scroll is no true palette; its contents mock the artist's intent. [The file is not a valid palette file]");
+
+            std::istringstream iss(str);
+
+            int r, g, b;
+            iss >> r >> g >> b;
+
+            printf("r: %d g: %d b: %d \n", r, g, b);
+            uint16_t argb = 0xF000;
+            argb |= ((r & 0xF0) >> 4) << 8;
+            argb |= ((g & 0xF0) >> 4) << 4;
+            argb |= ((b & 0xF0) >> 4); // Endianes stuff
+
+            if (i == 0)
+                pal[i] = 0x0000;
+            else
+                pal[i] = argb;
+        }
+
+        vdp_s0_load_palette(pal, col_cnt, 0);
     }
 }

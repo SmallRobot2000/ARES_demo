@@ -6,6 +6,7 @@
 #include <ARES_Engine/bitmap/color.hpp>  //Color
 #include <ARES_Engine/input.hpp>         //Input
 #include <ARES_Engine/engine.hpp>
+#include <ARES_Engine/sprite.hpp>
 
 // Math ඞ
 // Collision -> Math
@@ -31,7 +32,6 @@
 #include <array>
 #include <chrono>
 keyboard_event_t ev;
-sprite_attribute_t spr;
 
 static const uint8_t sprite32_smile[32 * 32] = {
     // row 0
@@ -130,11 +130,13 @@ static const uint8_t sprite32_smile[32 * 32] = {
     // row 31
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 // extern int ray_demo(int argc, char **argv);
+ARES_Engine::Sprite *spr;
+
 void start(int argc, char **argv)
 {
 
     vdp_b0_enable();
-    // vdp_s0_enable();
+    vdp_s0_enable();
     // vdp_b0_enable_linux_mode();
 
     auto start_point = ARES_Engine::Vector2i(100, 100);
@@ -147,12 +149,30 @@ void start(int argc, char **argv)
 
     std::vector<ARES_Engine::Engine::Frame> loaded_frames = ARES_Engine::Engine::load_sprite_data("./assets/test.spr");
 
-    ARES_Engine::Engine::free_sprite_data(loaded_frames);
+    ARES_Engine::Engine::load_sprite_palette("./assets/test1.pal");
+    printf("Frame[0] = %d", loaded_frames[0].hw_ids[1]);
 
-    // for (int i = 0; i < 1024 * 1024; i++)
-    // {
-    //     b0[i] = 0xF008;
-    // }
+    vdp_s0_enable();
+    spr = new ARES_Engine::Sprite();
+
+    spr->set_visible(true);
+    spr->set_frame(0);
+    spr->set_scale(2);
+    spr->set_palette(0);
+    spr->set_size(32);
+    spr->set_position(ARES_Engine::Vector2i(32, 32));
+    spr->update();
+
+    for (int i = 0; i < 2; i++)
+    {
+        printf("Fucking spr data rawwsadas.,mndaskmnldbhnaskjbdaskh: %lx\n", s0_att[i]);
+    }
+
+    // ARES_Engine::Engine::free_sprite_data(loaded_frames);
+    //  for (int i = 0; i < 1024 * 1024; i++)
+    //  {
+    //      b0[i] = 0xF008;
+    //  }
 
     // /*
     //     Spr init
@@ -258,13 +278,18 @@ void start(int argc, char **argv)
     // printf("\n");
     // printf("Execution Time: %llu microseconds\n", (unsigned long long)duration.count());
 
-    // scener_run_file("assets/scene.sen");
+    // scener_run_file("assets/scene1.sen");
 }
 
 ARES_Engine::Vector2i pos = ARES_Engine::Vector2i(100, 100);
 
 void loop()
 {
+
+    {
+        /* code */
+    }
+
     ARES_Engine::Input::update(true);
     if (ARES_Engine::Input::is_key_down(KEY_W))
     {
@@ -289,6 +314,8 @@ void loop()
     auto color = ARES_Engine::Bitmap::Color::Blue;
     ARES_Engine::Bitmap::set_pixel(pos, color);
 
+    spr->set_position(pos);
+    spr->update();
     while (vdp_is_v_blank())
         ;
     while (!vdp_is_v_blank())
