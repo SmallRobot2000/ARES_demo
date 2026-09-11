@@ -1,0 +1,6 @@
+# Build directory
+build/
+
+# Compiled executables
+main_sim
+main_hw
