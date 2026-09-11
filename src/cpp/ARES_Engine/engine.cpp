@@ -9,7 +9,6 @@ namespace fs = std::filesystem;
 namespace ARES_Engine
 {
 
-    bool Engine::_sprite_hw_id_used[128] = {};
 
     void enable_layer(Engine::Layer layer)
     {
@@ -61,7 +60,7 @@ namespace ARES_Engine
         }
     }
 
-    void free_sprite_data(std::vector<Engine::Frame> &array)
+    void Engine::free_sprite_data(std::vector<Engine::Frame> &array)
     {
 
         for (auto var : array)
@@ -83,7 +82,7 @@ namespace ARES_Engine
         array.clear();
     }
 
-    static std::vector<Engine::Frame> load_sprite_data(std::filesystem::path filename)
+    std::vector<Engine::Frame> Engine::load_sprite_data(std::filesystem::path filename)
     {
 
         if (!fs::exists(filename) || !fs::is_regular_file(filename))
@@ -96,9 +95,15 @@ namespace ARES_Engine
 
         uint8_t header[SPR_HEADER_SIZE];
 
-        file.read((char *)header, SPR_HEADER_SIZE);
+        file.seekg(0, std::ios::beg);
 
         if (!file)
+            throw std::runtime_error(
+                "The scroll would not be read; the attempt hath failed. [Seek failed]");
+
+        file.read(reinterpret_cast<char *>(header), SPR_HEADER_SIZE);
+
+        if (file.fail())
             throw std::runtime_error("The scroll would not be read; the attempt hath failed. [Reading file failed]");
 
         // We dont care for palette we load it before hand
@@ -119,6 +124,7 @@ namespace ARES_Engine
             throw std::runtime_error("Alas, the file's sprite is of an ill-sized form. [File has wrong sprite size]");
 
         uint16_t spr_cnt = (uint16_t)header[SPR_SPRCNT_OFF] + 1;
+        printf("INFO: %d sprite frames\n", spr_cnt);
 
         if (spr_cnt > 63)
             throw std::runtime_error("Alas, the sprites are too many in number. [Too many sprites]");
@@ -132,14 +138,12 @@ namespace ARES_Engine
 
         uint8_t *sprite_data = (uint8_t *)malloc(sprite_data_size);
 
-        free(sprite_data);
-
         file.read((char *)sprite_data, sprite_data_size);
 
         if (!file)
         {
             free(sprite_data);
-            throw std::runtime_error("The scroll would not be read; the attempt hath failed. [Reading file failed]");
+            throw std::runtime_error("The file doth resist our quest; to read it hath proved vain. [Reading file failed]");
         }
 
         uint16_t frame16_cnt = sprite_size == 16 ? spr_cnt : spr_cnt * 4;

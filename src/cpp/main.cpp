@@ -144,7 +144,9 @@ void start(int argc, char **argv)
     if (!ARES_Engine::Input::initialize())
         return;
 
-    std::vector<ARES_Engine::Engine::Frame> loaded_frames = ARES_Engine::Engine::load_sprite_data("alo");
+    std::vector<ARES_Engine::Engine::Frame> loaded_frames = ARES_Engine::Engine::load_sprite_data("./assets/test.spr");
+
+    ARES_Engine::Engine::free_sprite_data(loaded_frames);
 
     // for (int i = 0; i < 1024 * 1024; i++)
     // {
