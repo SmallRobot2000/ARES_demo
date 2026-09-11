@@ -1,32 +1,11 @@
-#include <ARES_Engine/bitmap.hpp>
 #include <cmath>
 #include <stdexcept>
 #include <vdp_api.h>
+#include <ARES_Engine/bitmap/bitmap.hpp>
 
-namespace ARES_Engine
+namespace ARES_Engine::Bitmap
 {
-#pragma region Color Implementation
-    const Bitmap::Color Bitmap::Color::Transparent(0, 0, 0, 0);
-    const Bitmap::Color Bitmap::Color::Black(15, 0, 0, 0);
-    const Bitmap::Color Bitmap::Color::White(15, 15, 15, 15);
-    const Bitmap::Color Bitmap::Color::Red(15, 15, 0, 0);
-    const Bitmap::Color Bitmap::Color::Green(15, 0, 15, 0);
-    const Bitmap::Color Bitmap::Color::Blue(15, 0, 0, 15);
-    const Bitmap::Color Bitmap::Color::Yellow(15, 15, 15, 0);
-    const Bitmap::Color Bitmap::Color::Cyan(15, 0, 15, 15);
-    const Bitmap::Color Bitmap::Color::Magenta(15, 15, 0, 15);
-
-    uint16_t Bitmap::Color::get_value() const
-    {
-        return static_cast<uint16_t>(
-            (a << 12) |
-            (r << 8) |
-            (g << 4) |
-            (b));
-    }
-#pragma endregion
-
-    void Bitmap::set_pixel(const Vector2i &position, const Bitmap::Color &color)
+    void set_pixel(const Vector2i &position, const Color &color)
     {
         if (position.x < 0 || position.x >= 1024 || position.y < 0 || position.y >= 1024)
             throw std::out_of_range("Pixel position is out of bounds.");
@@ -35,19 +14,19 @@ namespace ARES_Engine
         b0[address] = color.get_value();
     }
 
-    Bitmap::Color Bitmap::get_pixel(const Vector2i &position)
+    Color get_pixel(const Vector2i &position)
     {
         if (position.x < 0 || position.x >= 1024 || position.y < 0 || position.y >= 1024)
             throw std::out_of_range("Pixel position is out of bounds.");
 
         uint16_t address = position.y * 1024 + position.x;
-        return Bitmap::Color(b0[address]);
+        return Color(b0[address]);
     }
 
-    void Bitmap::set_rectangle(
+    void set_rectangle(
         const Vector2i &start_point,
         const Vector2i &end_point,
-        const Bitmap::Color &color)
+        const Color &color)
     {
         if (start_point.x < 0 || start_point.x >= 1024 || start_point.y < 0 || start_point.y >= 1024)
             throw std::out_of_range("Start point is out of bounds.");
@@ -73,10 +52,10 @@ namespace ARES_Engine
         }
     }
 
-    void Bitmap::set_line(
+    void set_line(
         const Vector2i &start_point,
         const Vector2i &end_point,
-        const Bitmap::Color &color)
+        const Color &color)
     {
         if (start_point.x < 0 || start_point.x >= 1024 || start_point.y < 0 || start_point.y >= 1024)
             throw std::out_of_range("Start point is out of bounds.");
