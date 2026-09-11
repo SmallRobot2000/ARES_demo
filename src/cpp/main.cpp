@@ -15,9 +15,8 @@
 // Bitmap almost ඞ (scroll and image loading)
 // Tilemap
 // Sprite ඞ - add collision on/off
-// Engine ඞ
+// Engine not ඞ fix me plz im begging you 💀💀💀
 // Input ඞ
-// Test
 // World - very later
 // Animation - very very later
 
