@@ -1,32 +1,11 @@
-#include <ARES_Engine/bitmap.hpp>
 #include <cmath>
 #include <stdexcept>
 #include <vdp_api.h>
+#include <ARES_Engine/bitmap/bitmap.hpp>
 
-namespace ARES_Engine
+namespace ARES_Engine::Bitmap
 {
-#pragma region Color Implementation
-    const Bitmap::Color Bitmap::Color::Transparent(0, 0, 0, 0);
-    const Bitmap::Color Bitmap::Color::Black(15, 0, 0, 0);
-    const Bitmap::Color Bitmap::Color::White(15, 15, 15, 15);
-    const Bitmap::Color Bitmap::Color::Red(15, 15, 0, 0);
-    const Bitmap::Color Bitmap::Color::Green(15, 0, 15, 0);
-    const Bitmap::Color Bitmap::Color::Blue(15, 0, 0, 15);
-    const Bitmap::Color Bitmap::Color::Yellow(15, 15, 15, 0);
-    const Bitmap::Color Bitmap::Color::Cyan(15, 0, 15, 15);
-    const Bitmap::Color Bitmap::Color::Magenta(15, 15, 0, 15);
-
-    uint16_t Bitmap::Color::get_value() const
-    {
-        return static_cast<uint16_t>(
-            (a << 12) |
-            (r << 8) |
-            (g << 4) |
-            (b));
-    }
-#pragma endregion
-
-    void Bitmap::set_pixel(const Vector2i &position, const Bitmap::Color &color)
+    void set_pixel(const Vector2i &position, const Bitmap::Color &color)
     {
         if (position.x < 0 || position.x >= 1024 || position.y < 0 || position.y >= 1024)
             throw std::out_of_range("Pixel position is out of bounds.");

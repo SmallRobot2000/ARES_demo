@@ -2,7 +2,8 @@
 #include <ARES_Engine/math/vector2i.hpp> //Vector2i
 #include <ARES_Engine/math/vector2f.hpp> //Vector2f
 #include <ARES_Engine/math/math.hpp>     //Math functions
-#include <ARES_Engine/bitmap.hpp>        //Bitmap
+#include <ARES_Engine/bitmap/bitmap.hpp> //Bitmap
+#include <ARES_Engine/bitmap/color.hpp>  //Color
 #include <ARES_Engine/input.hpp>         //Input
 #include <ARES_Engine/engine.hpp>
 
@@ -286,9 +287,12 @@ void loop()
     auto color = ARES_Engine::Bitmap::Color::Blue;
     ARES_Engine::Bitmap::set_pixel(pos, color);
 
-     while (vdp_is_v_blank());
-     while (!vdp_is_v_blank());
-     while (vdp_is_v_blank());
+    while (vdp_is_v_blank())
+        ;
+    while (!vdp_is_v_blank())
+        ;
+    while (vdp_is_v_blank())
+        ;
     //     ;
     // while (!vdp_is_v_blank())
     // if (keyboard_get_event(&ev) == 1)
