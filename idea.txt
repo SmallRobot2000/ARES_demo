@@ -42,5 +42,56 @@ IDEAS:
 GREEN SKY
 
 
+Gameplay loop:
+survival game
+cilj popravit spaceship
 
+oxygen bar
+health bar
+
+inventory:
+
+
+environment dangers
+1. wind
+2. tornado
+3. idk something like emp
+4. god smites you just cuz he dont like you
     
+
+head out and search for ship pieces
+
+2d game ko chrome dionosaur game
+imat worlds:
+1. inside the spaceship - refill oxygen, read lore, safe from environment dangers (MAIN)
+2. outside - gubis oxygen polako, sto vise itema imas to si sporiji (MAIN)
+3. other spaceships - read lore (potrgani su pa nema refill oxygen) (SIDE)
+4. caves - encounter enemies - weapon: pipe, axe ("Q" za left attack, "R" za right attack) (SIDE)
+5. mineshaft - boss enemy - perma buffs (SIDE)
+6. ancient temple - with boss buff you can reach this. add some lore idk man (rotating cube here) (SIDE) 
+7. Earth - prison, just an empty cell and nothing more (Credits roll) (MAIN)
+
+Main menu
+Settings menu
+Progress menu
+Saved games menu
+
+Spaceship parts needed 16
+
+Player settings:
+oxygen ammount
+speed
+damage ammount
+weapon
+
+
+
+ancient mars structures
+hidden entrance imat rotating 3d wireframe cube
+deep as fuck lore
+imat ostatke ostalih spaceshipova
+imat kosture ostalih prije tebe
+
+
+
+kada se vratis na Zemlju uhapse te zato sto je spaceship bio jako skup i potrgo si ga
