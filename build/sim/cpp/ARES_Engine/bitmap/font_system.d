@@ -1,9 +1,6 @@
-build/sim/cpp/main.o: src/cpp/main.cpp \
- include/ARES_Engine/math/vector2i.hpp \
- include/ARES_Engine/math/vector2f.hpp include/ARES_Engine/math/math.hpp \
- include/ARES_Engine/bitmap/bitmap.hpp \
- include/ARES_Engine/bitmap/color.hpp include/ARES_Engine/input.hpp \
- include/kbd.h include/ARES_Engine/bitmap/font.hpp \
+build/sim/cpp/ARES_Engine/bitmap/font_system.o: \
+ src/cpp/ARES_Engine/bitmap/font_system.cpp \
+ include/ARES_Engine/bitmap/font_system.hpp \
  /usr/include/freetype2/ft2build.h \
  /usr/include/freetype2/freetype/config/ftheader.h \
  /usr/include/freetype2/freetype/freetype.h \
@@ -18,17 +15,8 @@ build/sim/cpp/main.o: src/cpp/main.cpp \
  /usr/include/freetype2/freetype/ftimage.h \
  /usr/include/freetype2/freetype/fterrors.h \
  /usr/include/freetype2/freetype/ftmoderr.h \
- /usr/include/freetype2/freetype/fterrdef.h \
- include/ARES_Engine/bitmap/font_system.hpp include/app.h include/vdp.h \
- include/vdp_api.h include/scener.h
-include/ARES_Engine/math/vector2i.hpp:
-include/ARES_Engine/math/vector2f.hpp:
-include/ARES_Engine/math/math.hpp:
-include/ARES_Engine/bitmap/bitmap.hpp:
-include/ARES_Engine/bitmap/color.hpp:
-include/ARES_Engine/input.hpp:
-include/kbd.h:
-include/ARES_Engine/bitmap/font.hpp:
+ /usr/include/freetype2/freetype/fterrdef.h
+include/ARES_Engine/bitmap/font_system.hpp:
 /usr/include/freetype2/ft2build.h:
 /usr/include/freetype2/freetype/config/ftheader.h:
 /usr/include/freetype2/freetype/freetype.h:
@@ -44,8 +32,3 @@ include/ARES_Engine/bitmap/font.hpp:
 /usr/include/freetype2/freetype/fterrors.h:
 /usr/include/freetype2/freetype/ftmoderr.h:
 /usr/include/freetype2/freetype/fterrdef.h:
-include/ARES_Engine/bitmap/font_system.hpp:
-include/app.h:
-include/vdp.h:
-include/vdp_api.h:
-include/scener.h:

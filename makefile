@@ -98,16 +98,21 @@ SIM_CXXFLAGS := \
 	-std=c++17 \
 	-MMD \
 	-MP \
-	-pthread
+	-pthread \
+	$(SIM_FREETYPE_CFLAGS)
 
 
 # ------------------------------------------------------------
 # Libraries
 # ------------------------------------------------------------
 
+SIM_FREETYPE_CFLAGS := $(shell pkg-config --cflags freetype2)
+SIM_FREETYPE_LIBS   := $(shell pkg-config --libs freetype2)
+
 SIM_LDLIBS := \
 	-lX11 \
-	-pthread
+	-pthread \
+	$(SIM_FREETYPE_LIBS)
 
 
 # ------------------------------------------------------------
@@ -266,6 +271,7 @@ $(SIM_BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 $(SIM_BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
 	$(SIM_CXX) $(SIM_CPPFLAGS) $(SIM_CXXFLAGS) \
+		$(SIM_FREETYPE_CFLAGS) \
 		-c $< \
 		-o $@
 

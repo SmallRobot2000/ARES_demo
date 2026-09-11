@@ -2,7 +2,7 @@
 #include <ARES_Engine/math/vector2i.hpp> //Vector2i
 #include <ARES_Engine/math/vector2f.hpp> //Vector2f
 #include <ARES_Engine/math/math.hpp>     //Math functions
-#include <ARES_Engine/bitmap.hpp>        //Bitmap
+#include <ARES_Engine/bitmap/bitmap.hpp> //Bitmap
 #include <ARES_Engine/input.hpp>         //Input
 
 // Math ඞ
@@ -143,6 +143,22 @@ void start(int argc, char **argv)
     if (!ARES_Engine::Input::initialize())
         return;
 
+    /*PLAN
+        ARES_Engine::Bitmap::Font font("assets/fonts/ARIAL.ttf");
+
+        ARES_Engine::Bitmap::Text_settings settings;
+        settings.font_size = 32;
+        settings.position = {100, 50};
+        settings.text_color = ARES_Engine::Bitmap::Color::White;
+        settings.text_background = ARES_Engine::Bitmap::Color::Transparent;
+
+        auto text = ARES_Engine::Bitmap::set_text(
+            "Hello World!",
+            &font,
+            &settings);
+
+        text.edit_text_content("New text!");
+    */
     // for (int i = 0; i < 1024 * 1024; i++)
     // {
     //     b0[i] = 0xF008;
@@ -283,9 +299,12 @@ void loop()
     auto color = ARES_Engine::Bitmap::Color::Blue;
     ARES_Engine::Bitmap::set_pixel(pos, color);
 
-     while (vdp_is_v_blank());
-     while (!vdp_is_v_blank());
-     while (vdp_is_v_blank());
+    while (vdp_is_v_blank())
+        ;
+    while (!vdp_is_v_blank())
+        ;
+    while (vdp_is_v_blank())
+        ;
     //     ;
     // while (!vdp_is_v_blank())
     // if (keyboard_get_event(&ev) == 1)
