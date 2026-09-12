@@ -42,7 +42,7 @@ void start(int argc, char **argv)
 
     std::vector<ARES_Engine::Engine::Frame> loaded_frames = ARES_Engine::Engine::load_sprite_data("./assets/test.spr");
 
-    ARES_Engine::Engine::load_sprite_palette("./assets/test1.pal");
+    ARES_Engine::Engine::load_sprite_palette("./assets/test1.pal", ARES_Engine::Sprite::Palette::Pal_0);
     printf("Frame[0] = %d", loaded_frames[0].hw_ids[1]);
 
     spr = new ARES_Engine::Sprite();
@@ -55,7 +55,17 @@ void start(int argc, char **argv)
     spr->set_position(ARES_Engine::Vector2i(32, 32));
     spr->update();
 
-    // ARES_Engine::Engine::free_sprite_data(loaded_frames);
+    ARES_Engine::Engine::load_tile_data("assets/test.til", ARES_Engine::Engine::Layer::Tile0);
+    ARES_Engine::Engine::load_tile_data("assets/test.til", ARES_Engine::Engine::Layer::Tile1);
+
+    ARES_Engine::Engine::load_tilemap("assets/test.map", "Tile Layer 1", ARES_Engine::Engine::Layer::Tile0);
+    ARES_Engine::Engine::load_tilemap("assets/test.map", "Tile Layer 1", ARES_Engine::Engine::Layer::Tile1);
+
+    ARES_Engine::Engine::load_bitmap_data("assets/bitmap1.b0", ARES_Engine::Vector2i(0, 0));
+
+    ARES_Engine::Engine::enable_layer(ARES_Engine::Engine::Layer::Tile0);
+    ARES_Engine::Engine::enable_layer(ARES_Engine::Engine::Layer::Tile1);
+    //  ARES_Engine::Engine::free_sprite_data(loaded_frames);
 
     // scener_run_file("assets/scene1.sen");
 }

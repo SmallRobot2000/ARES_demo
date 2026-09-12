@@ -1,4 +1,5 @@
 #include <ARES_Engine/engine.hpp>
+#include <custom_formats.h>
 #include <vdp_api.h>
 #include <stdexcept>
 #include <filesystem>
@@ -186,7 +187,7 @@ namespace ARES_Engine::Engine
         return frames;
     }
 
-    void load_sprite_palette(std::filesystem::path filename)
+    void load_sprite_palette(std::filesystem::path filename, Sprite::Palette pal_num)
     {
         if (!fs::exists(filename) || !fs::is_regular_file(filename))
             throw std::runtime_error("Lo, this path is erroneous; it leadeth nowhere true [This path is invalid]");
@@ -239,6 +240,203 @@ namespace ARES_Engine::Engine
                 pal[i] = argb;
         }
 
-        vdp_s0_load_palette(pal, col_cnt, 0);
+        vdp_s0_load_palette(pal, col_cnt, (uint8_t)pal_num);
     }
+
+    void load_tile_data(std::filesystem::path filename, Engine::Layer layer)
+    {
+
+        if (layer != Engine::Layer::Tile0 && layer != Engine::Layer::Tile1)
+            throw std::runtime_error("Invalid layer");
+
+        if (!fs::exists(filename) || !fs::is_regular_file(filename))
+            throw std::runtime_error("Invalid path");
+
+        std::ifstream file(filename, std::ios::in);
+
+        if (!file)
+            throw std::runtime_error("Coudn't open file");
+
+        file.seekg(0);
+        uint8_t header[TIL_HEADER_SIZE];
+        file.read(reinterpret_cast<char *>(header), TIL_HEADER_SIZE);
+
+        if (!file)
+            throw std::runtime_error("Failed reading file");
+
+        uint16_t tile_cnt;
+        memcpy(&tile_cnt, &header[TIL_TILCNT_OFF], 2);
+
+        file.close();
+
+        int ret;
+        if (layer == Engine::Layer::Tile0)
+            ret = vdp_t0_load_til_file(filename.c_str(), 0, tile_cnt, 1);
+        else
+            ret = vdp_t1_load_til_file(filename.c_str(), 0, tile_cnt, 1);
+
+        if (ret != 0)
+            throw std::runtime_error("Failed loading tile data");
+    }
+
+    void load_tilemap(const std::filesystem::path &filename, int layer_id, Engine::Layer tile_layer)
+    {
+        if (tile_layer != Engine::Layer::Tile0 && tile_layer != Engine::Layer::Tile1)
+        {
+            throw std::runtime_error("Invalid layer");
+        }
+        std::ifstream file(filename);
+
+        // failed to open
+        if (!file)
+        {
+            throw std::runtime_error("Failed to open tilemap: " + filename.string());
+        }
+
+        uint8_t header[MAP_HEADER_SIZE];
+
+        file.read(reinterpret_cast<char *>(header), sizeof(header));
+
+        if (!file)
+            throw std::runtime_error("Failed to read" + filename.string());
+
+        if (memcmp(&header[MAP_HEADER_MAGIC_OFF], MAP_HEADER_MAGIC, 3) != 0)
+        {
+            throw std::runtime_error("Wrong format " + filename.string());
+        }
+
+        uint8_t layer_cnt = header[MAP_HEADER_LAYER_CNT_OFF];
+
+        uint8_t layer_table[MAP_LAYER_TABLE_SIZE];
+        file.read(reinterpret_cast<char *>(layer_table), sizeof(layer_table));
+        if (!file)
+            throw std::runtime_error("Failed to read" + filename.string());
+
+        bool found = false;
+        int cnt = 0;
+        for (int i = 0; i < layer_cnt; i++)
+        {
+
+            if (layer_table[(i * MAP_LAYER_TABLE_ENTRY_SIZE) + MAP_LAYER_TABLE_ID_OFF] == layer_id)
+            {
+                found = true;
+                cnt = i;
+                break;
+            }
+        }
+
+        if (!found)
+            throw std::runtime_error("Failed to find layer with ID: " + std::to_string(layer_id) + " in " + filename.string());
+
+        // Load map
+        file.seekg(MAP_LAYER_DATA_OFF + (cnt * MAP_LAYER_DATA_ENTRY_SIZE));
+
+        uint16_t *map_buf[MAP_LAYER_DATA_ENTRY_SIZE / 2];
+
+        file.read(reinterpret_cast<char *>(map_buf), MAP_LAYER_DATA_ENTRY_SIZE);
+
+        if (!file)
+            throw std::runtime_error("Failed to read file: " + filename.string());
+
+        memcpy(tile_layer == Engine::Layer::Tile0 ? (void *)t0_map : (void *)t1_map, map_buf, MAP_LAYER_DATA_ENTRY_SIZE);
+    }
+
+    void load_tilemap(const std::filesystem::path &filename, const char *layer_name, Engine::Layer tile_layer)
+    {
+        if (tile_layer != Engine::Layer::Tile0 && tile_layer != Engine::Layer::Tile1)
+        {
+            throw std::runtime_error("Invalid layer");
+        }
+        std::ifstream file(filename);
+
+        // failed to open
+        if (!file)
+        {
+            throw std::runtime_error("Failed to open tilemap: " + filename.string());
+        }
+
+        uint8_t header[MAP_HEADER_SIZE];
+
+        file.read(reinterpret_cast<char *>(header), sizeof(header));
+
+        if (!file)
+            throw std::runtime_error("Failed to read" + filename.string());
+
+        if (memcmp(&header[MAP_HEADER_MAGIC_OFF], MAP_HEADER_MAGIC, 3) != 0)
+        {
+            throw std::runtime_error("Wrong format " + filename.string());
+        }
+
+        uint8_t layer_cnt = header[MAP_HEADER_LAYER_CNT_OFF];
+
+        uint8_t layer_table[MAP_LAYER_TABLE_SIZE];
+        file.read(reinterpret_cast<char *>(layer_table), sizeof(layer_table));
+        if (!file)
+            throw std::runtime_error("Failed to read" + filename.string());
+
+        bool found = false;
+        int cnt = 0;
+        char name[MAP_MAX_NAME_LEN + 1];
+        for (int i = 0; i < layer_cnt; i++)
+        {
+            memset(name, 0, MAP_MAX_NAME_LEN + 1);
+            memcpy(name, &layer_table[(i * MAP_LAYER_TABLE_ENTRY_SIZE) + MAP_LAYER_TABLE_NAME_OFF], MAP_MAX_NAME_LEN);
+
+            if (strcmp(name, layer_name) == 0)
+            {
+                found = true;
+                cnt = i;
+                break;
+            }
+        }
+
+        std::string str_name = layer_name;
+        if (!found)
+            throw std::runtime_error("Failed to find layer with name: \"" + str_name + "\" in " + filename.string());
+
+        // Load map
+        file.seekg(MAP_LAYER_DATA_OFF + (cnt * MAP_LAYER_DATA_ENTRY_SIZE));
+
+        uint16_t *map_buf[MAP_LAYER_DATA_ENTRY_SIZE / 2];
+
+        file.read(reinterpret_cast<char *>(map_buf), MAP_LAYER_DATA_ENTRY_SIZE);
+
+        if (!file)
+            throw std::runtime_error("Failed to read file: " + filename.string());
+
+        memcpy(tile_layer == Engine::Layer::Tile0 ? (void *)t0_map : (void *)t1_map, map_buf, MAP_LAYER_DATA_ENTRY_SIZE);
+    }
+
+    void set_layer_offset(Vector2i offset, Engine::Layer layer)
+    {
+        switch (layer)
+        {
+        case Engine::Layer::Tile0:
+            vdp_t0_set_x_offset(offset.x);
+            vdp_t0_set_y_offset(offset.y);
+            break;
+
+        case Engine::Layer::Tile1:
+            vdp_t1_set_x_offset(offset.x);
+            vdp_t1_set_y_offset(offset.y);
+            break;
+
+        case Engine::Layer::Bitmap:
+            vdp_b0_set_x_offset(offset.x);
+            vdp_b0_set_y_offset(offset.y);
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    void load_bitmap_data(const std::filesystem::path &filename, Vector2i pos)
+    {
+        int ret = vdp_b0_load_b0_file(filename.c_str(), pos.x, pos.y);
+
+        if (ret != 0)
+            throw std::runtime_error("Failed loadingfile: " + filename.string());
+    }
+
 }

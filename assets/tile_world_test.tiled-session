@@ -1,0 +1,48 @@
+{
+    "activeFile": "",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "Tile_world_test.tsx": {
+            "dynamicWrapping": false,
+            "scaleInEditor": 8
+        },
+        "Tiles.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "World_set_2.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "test.tmx": {
+            "scale": 0.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 158,
+                "y": 564
+            }
+        }
+    },
+    "last.imagePath": "/home/lovro/ARES/ARES_demo/assets",
+    "map.height": 128,
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 8,
+    "map.tileWidth": 8,
+    "map.width": 128,
+    "openFiles": [
+    ],
+    "project": "tile_world_test.tiled-project",
+    "recentFiles": [
+        "Tiles.tsx",
+        "test.tmx",
+        "World_set_2.tsx",
+        "Tile_world_test.tsx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 8,
+        "width": 8
+    }
+}

@@ -1,10 +1,15 @@
 #pragma once
+#include <ARES_Engine/sprite.hpp>
 #include <vector>
 #include <string>
 #include <filesystem>
 
 #define MAX_HW_ID 128
 
+/*
+ * TODO:
+ * optimize void load_bitmap_data - old API does loading line by line - slower bc disk slow
+ */
 namespace ARES_Engine::Engine
 {
 
@@ -65,28 +70,64 @@ namespace ARES_Engine::Engine
      *
      * @throws std::runtime_error if the file cannot be opened or read.
      */
-    void load_sprite_palette(std::filesystem::path filename);
+    void load_sprite_palette(std::filesystem::path filename, Sprite::Palette pal_num);
 
     /**
      * @brief Load tile graphics data.
      *
-     * TODO: define input source and tile-data format.
+     * Loads tile data into the VDP tile data memory.
+     *
+     * @param filename Path to the .til file.
+     *
+     * @param layer Layer to witch to load tile data
+     *
+     * @throws std::runtime_error if the file cannot be opened or read.
      */
-    void load_tile_data();
+    void load_tile_data(std::filesystem::path filename, Engine::Layer layer);
 
     /**
-     * @brief Load a tile map.
+     * @brief Load a tile map layer by numeric layer ID.
      *
-     * TODO: define input source and tile-map format.
+     * Loads the tile-map data from the specified file and copies the selected
+     * source layer into the requested engine tile layer.
+     *
+     * @param filename   Path to the tile-map file.
+     * @param layer_id   ID of the layer to load.
+     * @param tile_layer Destination engine layer.
+     *
+     * @throws std::runtime_error If the file cannot be opened or the requested
+     *                            layer cannot be loaded.
      */
-    void load_tilemap();
+    void load_tilemap(const std::filesystem::path &filename, int layer_id, Engine::Layer tile_layer);
 
     /**
-     * @brief Load bitmap graphics data.
+     * @brief Load a tile map layer by layer name.
      *
-     * TODO: define input source and bitmap-data format.
+     * Loads the tile-map data from the specified file and copies the selected
+     * source layer into the requested engine tile layer.
+     *
+     * @param filename   Path to the tile-map file.
+     * @param layer_name Name of the layer to load.
+     * @param tile_layer Destination engine layer.
+     *
+     * @throws std::runtime_error If the file cannot be opened or the requested
+     *                            layer cannot be loaded.
      */
-    void load_bitmap_data();
+    void load_tilemap(const std::filesystem::path &filename, const char *layer_name, Engine::Layer tile_layer);
+
+    /**
+     * @brief Load bitmap graphics data into video memory.
+     *
+     * Loads bitmap data from the specified file and places it at the given
+     * destination position.
+     *
+     * @param filename Path to the bitmap data file.
+     * @param pos      Destination position where the bitmap data will be loaded.
+     *
+     * @throws std::runtime_error If the file cannot be opened or the bitmap
+     *                            data cannot be loaded.
+     */
+    void load_bitmap_data(const std::filesystem::path &filename, Vector2i pos);
 
     /**
      * @brief Release hardware sprite-data resources used by a frame array.
@@ -111,6 +152,8 @@ namespace ARES_Engine::Engine
      * @param layer Layer to disable.
      */
     void disable_layer(Engine::Layer layer);
+
+    void set_layer_offset(Vector2i offset, Engine::Layer layer);
 
     /**
      * @brief Tracks allocation of hardware sprite-data IDs.

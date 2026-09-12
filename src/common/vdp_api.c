@@ -471,7 +471,7 @@ int vdp_b0_load_b0_file(const char *filename, int x_off, int y_off)
  * @param load_pal 1 - to load palette 0 - to not load palette
  *
  */
-int vdp_t0_load_til_file(const char *filename, uint32_t offset, uint8_t cnt, int load_pal)
+int vdp_t0_load_til_file(const char *filename, uint32_t offset, uint16_t cnt, int load_pal)
 {
     FILE *fd = fopen(filename, "rb");
 
@@ -590,7 +590,7 @@ int vdp_t0_load_til_file(const char *filename, uint32_t offset, uint8_t cnt, int
  * @param load_pal 1 - to load palette 0 - to not load palette
  *
  */
-int vdp_t1_load_til_file(const char *filename, uint32_t offset, uint8_t cnt, int load_pal)
+int vdp_t1_load_til_file(const char *filename, uint32_t offset, uint16_t cnt, int load_pal)
 {
     FILE *fd = fopen(filename, "rb");
 

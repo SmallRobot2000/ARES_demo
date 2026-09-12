@@ -1,9 +1,14 @@
 {
     "activeFile": "",
     "expandedProjectPaths": [
+        "."
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
+        "Tiles.tsx": {
+            "scaleInDock": 1,
+            "scaleInEditor": 8
+        }
     },
     "last.imagePath": "/home/lovro/ARES/ARES_demo/assets",
     "map.height": 128,
@@ -14,6 +19,7 @@
     ],
     "project": "tiles.tiled-project",
     "recentFiles": [
+        "Tiles.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

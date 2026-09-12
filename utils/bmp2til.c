@@ -238,26 +238,20 @@ int main(int argc, char *argv[])
     uint32_t til_data_off = 0;
     uint32_t frame_in = 0;
 
-    for (int frame_y = 0; frame_y < tiles_y; frame_y++)
+    for (int tile_y = 0; tile_y < tiles_y; tile_y++)
     {
-        for (int frame_x = 0; frame_x < tiles_x; frame_x++)
+        for (int tile_x = 0; tile_x < tiles_x; tile_x++)
         {
-            frame_in = (frame_x * TILE_SIZE) + (frame_y * bmp_width);
-            for (int n = 0; n < TILE_SIZE * TILE_SIZE; n++)
+            for (int y = 0; y < TILE_SIZE; y++)
             {
-
-                /*
-                if (frame_x == 0 && frame_y == 0)
+                for (int x = 0; x < TILE_SIZE; x++)
                 {
-                    printf("DEBUG: frame_in %d, til_data_off %d n: %d\n", frame_in, til_data_off, n);
-                }
-                */
-                til_data[til_data_off] = bmp_image[frame_in];
+                    int src =
+                        (tile_y * TILE_SIZE + y) * bmp_width +
+                        (tile_x * TILE_SIZE + x);
 
-                frame_in++;
-                if (frame_in % TILE_SIZE == 0)
-                    frame_in += bmp_width - TILE_SIZE;
-                til_data_off++;
+                    til_data[til_data_off++] = bmp_image[src];
+                }
             }
         }
     }

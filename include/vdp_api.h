@@ -8,38 +8,13 @@
 #include <string.h>
 #include <vdp.h>
 #include <errno.h>
+#include <custom_formats.h>
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-    /*
-       SPR file
-    */
-#define SPR_HEADER_SIZE 32
-#define SPR_MAGIC "SPR"
-#define SPR_MAGIC_OFF 0                            //"SPR"
-#define SPR_PAL_COLORS_OFF 3                       // 0-255 (total colors - 1)
-#define SPR_SPRCNT_OFF 4                           // 0-n
-#define SPR_SPRSIZE_OFF 5                          // 16 or 32
-#define SPR_PAL_START 32                           // palette start
-#define SPR_SPRITE_START SPR_PAL_START + (256 * 2) // 256 posible 16bit ARGB4444 colors
 
-#define B0_HEADER_SIZE 8
-#define B0_MAGIC "B0L"
-#define B0_MAGIC_OFF 0 //"B0L"
-#define B0_WIDTH_OFF 4
-#define B0_HEIGHT_OFF 6
-#define B0_IMAGE_OFF 8
-
-#define TIL_SIZE 8
-#define TIL_HEADER_SIZE 8
-#define TIL_MAGIC "TIL"
-#define TIL_MAGIC_OFF 0                         //"til"
-#define TIL_PAL_COLORS_OFF 3                    // 0-255 (total colors - 1)
-#define TIL_TILCNT_OFF 4                        // 1-1024 (16 bit)
-#define TIL_PAL_START 8                         // palette start
-#define TIL_TIL_START TIL_PAL_START + (256 * 2) // 256 posible 16bit ARGB4444 colors
     /**
      * @brief S0 sprite attribute description.
      *
@@ -148,8 +123,8 @@ extern "C"
     sprite_attribute_t vdp_s0_read_sprite_attribute(uint16_t spr_num);
     int vdp_s0_load_spr_file(const char *filename, uint32_t offset, uint8_t cnt, uint8_t pal_num, uint8_t sprite_size);
     int vdp_b0_load_b0_file(const char *filename, int x_off, int y_off);
-    int vdp_t0_load_til_file(const char *filename, uint32_t offset, uint8_t cnt, int load_pal);
-    int vdp_t1_load_til_file(const char *filename, uint32_t offset, uint8_t cnt, int load_pal);
+    int vdp_t0_load_til_file(const char *filename, uint32_t offset, uint16_t cnt, int load_pal);
+    int vdp_t1_load_til_file(const char *filename, uint32_t offset, uint16_t cnt, int load_pal);
 #ifdef __cplusplus
 }
 #endif
