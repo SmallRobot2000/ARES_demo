@@ -529,39 +529,140 @@ static void copy_frame_to_ximage(XImage *image,
                                  Visual *visual,
                                  unsigned long xcolors[4096])
 {
-    int y;
-    int native_order = (host_is_little_endian() && image->byte_order == LSBFirst) ||
-                       (!host_is_little_endian() && image->byte_order == MSBFirst);
+    int dst_y;
+    int native_order =
+        (host_is_little_endian() && image->byte_order == LSBFirst) ||
+        (!host_is_little_endian() && image->byte_order == MSBFirst);
+
+    int viewport_width;
+    int viewport_height;
+    int viewport_x;
+    int viewport_y;
 
     (void)visual;
 
+    if (image->width <= 0 || image->height <= 0)
+        return;
+
+    /*
+     * Preserve the native 640x480 (4:3) VDP aspect ratio.
+     *
+     * If the X11 window itself is not exactly 4:3, center the VDP image
+     * and leave black bars on the unused sides (letterbox/pillarbox).
+     */
+    if ((int64_t)image->width * SCREEN_HEIGHT <=
+        (int64_t)image->height * SCREEN_WIDTH)
+    {
+        viewport_width = image->width;
+        viewport_height =
+            (int)(((int64_t)image->width * SCREEN_HEIGHT) / SCREEN_WIDTH);
+    }
+    else
+    {
+        viewport_height = image->height;
+        viewport_width =
+            (int)(((int64_t)image->height * SCREEN_WIDTH) / SCREEN_HEIGHT);
+    }
+
+    if (viewport_width < 1)
+        viewport_width = 1;
+    if (viewport_height < 1)
+        viewport_height = 1;
+
+    viewport_x = (image->width - viewport_width) / 2;
+    viewport_y = (image->height - viewport_height) / 2;
+
+    /*
+     * Clear the complete host image first.  This produces black bars
+     * whenever the host window is not exactly 4:3.
+     */
+    memset(image->data, 0,
+           (size_t)image->bytes_per_line * (size_t)image->height);
+
+    /*
+     * Scale the fixed 640x480 framebuffer into the 4:3 viewport using
+     * nearest-neighbour scaling.
+     */
     if (image->bits_per_pixel == 32 && native_order)
     {
-        for (y = 0; y < SCREEN_HEIGHT; ++y)
+        for (dst_y = 0; dst_y < viewport_height; ++dst_y)
         {
-            uint32_t *dst = (uint32_t *)(void *)(image->data +
-                                                 y * image->bytes_per_line);
-            int x;
-            for (x = 0; x < SCREEN_WIDTH; ++x)
+            int src_y =
+                (int)(((int64_t)dst_y * SCREEN_HEIGHT) / viewport_height);
+
+            uint32_t *dst =
+                (uint32_t *)(void *)(image->data +
+                                     (dst_y + viewport_y) *
+                                         image->bytes_per_line);
+
+            int dst_x;
+
+            for (dst_x = 0; dst_x < viewport_width; ++dst_x)
             {
-                uint16_t rgb444 = final_frame[(size_t)y * SCREEN_WIDTH + x];
-                dst[x] = (uint32_t)xcolors[rgb444 & 0x0FFFu];
+                int src_x =
+                    (int)(((int64_t)dst_x * SCREEN_WIDTH) / viewport_width);
+
+                uint16_t rgb444 =
+                    final_frame[(size_t)src_y * SCREEN_WIDTH + src_x];
+
+                dst[dst_x + viewport_x] =
+                    (uint32_t)xcolors[rgb444 & 0x0FFFu];
             }
         }
     }
     else
     {
         /* Portable fallback for unusual X visuals. */
-        for (y = 0; y < SCREEN_HEIGHT; ++y)
+        for (dst_y = 0; dst_y < viewport_height; ++dst_y)
         {
-            int x;
-            for (x = 0; x < SCREEN_WIDTH; ++x)
+            int src_y =
+                (int)(((int64_t)dst_y * SCREEN_HEIGHT) / viewport_height);
+
+            int dst_x;
+
+            for (dst_x = 0; dst_x < viewport_width; ++dst_x)
             {
-                uint16_t rgb444 = final_frame[(size_t)y * SCREEN_WIDTH + x];
-                XPutPixel(image, x, y, xcolors[rgb444 & 0x0FFFu]);
+                int src_x =
+                    (int)(((int64_t)dst_x * SCREEN_WIDTH) / viewport_width);
+
+                uint16_t rgb444 =
+                    final_frame[(size_t)src_y * SCREEN_WIDTH + src_x];
+
+                XPutPixel(image,
+                          dst_x + viewport_x,
+                          dst_y + viewport_y,
+                          xcolors[rgb444 & 0x0FFFu]);
             }
         }
     }
+}
+
+static XImage *create_ximage(Display *dpy,
+                             Visual *visual,
+                             int depth,
+                             int width,
+                             int height)
+{
+    XImage *image;
+
+    if (width <= 0 || height <= 0)
+        return NULL;
+
+    image = XCreateImage(dpy, visual, (unsigned)depth,
+                         ZPixmap, 0, NULL,
+                         (unsigned)width, (unsigned)height,
+                         32, 0);
+    if (!image)
+        return NULL;
+
+    image->data = calloc(1, (size_t)image->bytes_per_line * image->height);
+    if (!image->data)
+    {
+        XDestroyImage(image);
+        return NULL;
+    }
+
+    return image;
 }
 
 static uint64_t monotonic_ns(void)
@@ -593,6 +694,8 @@ static void *simulator_thread(void *arg)
     Atom wm_delete;
     XSizeHints hints;
     XImage *image;
+    int window_width = SCREEN_WIDTH;
+    int window_height = SCREEN_HEIGHT;
     unsigned long xcolors[4096];
     unsigned i;
     uint64_t next_frame;
@@ -634,9 +737,19 @@ static void *simulator_thread(void *arg)
     XSelectInput(dpy, win, ExposureMask | KeyPressMask | KeyReleaseMask | StructureNotifyMask);
 
     memset(&hints, 0, sizeof(hints));
-    hints.flags = PMinSize | PMaxSize;
-    hints.min_width = hints.max_width = SCREEN_WIDTH;
-    hints.min_height = hints.max_height = SCREEN_HEIGHT;
+    hints.flags = PMinSize | PAspect;
+    hints.min_width = 160;
+    hints.min_height = 120;
+
+    /*
+     * Ask the window manager to keep the client area at the native
+     * VDP aspect ratio: 640:480 = 4:3.
+     */
+    hints.min_aspect.x = 4;
+    hints.min_aspect.y = 3;
+    hints.max_aspect.x = 4;
+    hints.max_aspect.y = 3;
+
     XSetWMNormalHints(dpy, win, &hints);
 
     wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
@@ -645,25 +758,11 @@ static void *simulator_thread(void *arg)
     gc = XCreateGC(dpy, win, 0, NULL);
     XMapWindow(dpy, win);
 
-    image = XCreateImage(dpy, visual, (unsigned)depth,
-                         ZPixmap, 0, NULL,
-                         SCREEN_WIDTH, SCREEN_HEIGHT,
-                         32, 0);
+    image = create_ximage(dpy, visual, depth,
+                          window_width, window_height);
     if (!image)
     {
-        fprintf(stderr, "ARES VDP simulator: XCreateImage failed\n");
-        XFreeGC(dpy, gc);
-        XDestroyWindow(dpy, win);
-        XCloseDisplay(dpy);
-        atomic_store(&sim_running, 0);
-        return NULL;
-    }
-
-    image->data = calloc(1, (size_t)image->bytes_per_line * image->height);
-    if (!image->data)
-    {
-        fprintf(stderr, "ARES VDP simulator: image allocation failed\n");
-        XDestroyImage(image);
+        fprintf(stderr, "ARES VDP simulator: XImage allocation failed\n");
         XFreeGC(dpy, gc);
         XDestroyWindow(dpy, win);
         XCloseDisplay(dpy);
@@ -767,6 +866,31 @@ static void *simulator_thread(void *arg)
                 break;
             }
 
+            case ConfigureNotify:
+            {
+                int new_width = ev.xconfigure.width;
+                int new_height = ev.xconfigure.height;
+
+                if (new_width > 0 && new_height > 0 &&
+                    (new_width != window_width ||
+                     new_height != window_height))
+                {
+                    XImage *new_image =
+                        create_ximage(dpy, visual, depth,
+                                      new_width, new_height);
+
+                    if (new_image)
+                    {
+                        XDestroyImage(image);
+                        image = new_image;
+                        window_width = new_width;
+                        window_height = new_height;
+                    }
+                }
+
+                break;
+            }
+
             default:
                 break;
             }
@@ -789,8 +913,8 @@ static void *simulator_thread(void *arg)
             image,
             0, 0,
             0, 0,
-            SCREEN_WIDTH,
-            SCREEN_HEIGHT);
+            (unsigned)window_width,
+            (unsigned)window_height);
 
         XFlush(dpy);
 
