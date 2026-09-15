@@ -7,7 +7,9 @@
 #include <ARES_Engine/input.hpp>         //Input
 #include <ARES_Engine/engine.hpp>        //Engine
 #include <ARES_Engine/sprite.hpp>        //Sprite
+
 #include <app.h>
+#include <memory>
 
 // Math ඞ
 // Collision -> Math
@@ -23,79 +25,81 @@
 // CTRL + K + C to comment selected lines
 // CTRL + K + U to uncomment selected lines
 
-ARES_Engine::Sprite *spr;
+using namespace ARES_Engine;
+
+Sprite *spr;
 
 void start(int argc, char **argv)
 {
 
-    ARES_Engine::Engine::enable_layer(ARES_Engine::Engine::Bitmap);
-    ARES_Engine::Engine::enable_layer(ARES_Engine::Engine::Sprite);
+    Engine::enable_layer(Engine::Bitmap);
+    Engine::enable_layer(Engine::Sprite);
 
-    auto start_point = ARES_Engine::Vector2i(100, 100);
-    auto end_point = ARES_Engine::Vector2i(200, 200);
-    auto color = ARES_Engine::Bitmap::Color::Red;
-    ARES_Engine::Bitmap::set_rectangle(start_point, end_point, color);
+    auto start_point = Vector2i(100, 100);
+    auto end_point = Vector2i(200, 200);
+    auto color = Bitmap::Color::Red;
 
-    if (!ARES_Engine::Input::initialize())
+    Bitmap::set_rectangle(start_point, end_point, color);
+
+    if (!Input::initialize())
         return;
 
-    std::vector<ARES_Engine::Engine::Frame> loaded_frames = ARES_Engine::Engine::load_sprite_data("./assets/test.spr");
+    auto loaded_frames = Engine::load_sprite_data("./assets/test.spr");
 
-    ARES_Engine::Engine::load_sprite_palette("./assets/test1.pal", ARES_Engine::Sprite::Palette::Pal_0);
+    Engine::load_sprite_palette("./assets/test1.pal", Sprite::Palette::Pal_0);
     printf("Frame[0] = %d", loaded_frames[0].hw_ids[1]);
 
-    spr = new ARES_Engine::Sprite();
-
+    spr = new Sprite();
     spr->set_visible(true);
     spr->set_frame(0);
-    spr->set_scale(ARES_Engine::Sprite::Scale::x2);
-    spr->set_palette(ARES_Engine::Sprite::Palette::Pal_0);
-    spr->set_size(ARES_Engine::Sprite::Size::x32);
-    spr->set_position(ARES_Engine::Vector2i(32, 32));
+    spr->set_scale(Sprite::Scale::x2);
+    spr->set_palette(Sprite::Palette::Pal_0);
+    spr->set_size(Sprite::Size::x32);
+    spr->set_position(Vector2i(32, 32));
     spr->update();
 
-    ARES_Engine::Engine::load_tile_data("assets/test.til", ARES_Engine::Engine::Layer::Tile0);
-    ARES_Engine::Engine::load_tile_data("assets/test.til", ARES_Engine::Engine::Layer::Tile1);
+    Engine::load_tile_data("assets/test.til", Engine::Layer::Tile0);
+    Engine::load_tile_data("assets/test.til", Engine::Layer::Tile1);
 
-    ARES_Engine::Engine::load_tilemap("assets/test.map", "Tile Layer 1", ARES_Engine::Engine::Layer::Tile0);
-    ARES_Engine::Engine::load_tilemap("assets/test.map", "Tile Layer 1", ARES_Engine::Engine::Layer::Tile1);
+    Engine::load_tilemap("assets/test.map", "Tile Layer 1", Engine::Layer::Tile0);
+    Engine::load_tilemap("assets/test.map", "Tile Layer 1", Engine::Layer::Tile1);
 
-    ARES_Engine::Engine::load_bitmap_data("assets/bitmap1.b0", ARES_Engine::Vector2i(0, 0));
+    Engine::load_bitmap_data("assets/bitmap1.b0", Vector2i(0, 0));
 
-    ARES_Engine::Engine::enable_layer(ARES_Engine::Engine::Layer::Tile0);
-    ARES_Engine::Engine::enable_layer(ARES_Engine::Engine::Layer::Tile1);
-    //  ARES_Engine::Engine::free_sprite_data(loaded_frames);
+    Engine::enable_layer(Engine::Layer::Tile0);
+    Engine::enable_layer(Engine::Layer::Tile1);
+    //  Engine::free_sprite_data(loaded_frames);
 
     // scener_run_file("assets/scene1.sen");
 }
 
-ARES_Engine::Vector2i pos = ARES_Engine::Vector2i(100, 100);
+Vector2i pos = Vector2i(100, 100);
 
 void loop()
 {
-    ARES_Engine::Input::update(true);
-    if (ARES_Engine::Input::is_key_down(KEY_W))
+    Input::update(true);
+    if (Input::is_key_down(KEY_W))
     {
         pos.y -= 1;
     }
-    if (ARES_Engine::Input::is_key_down(KEY_A))
+    if (Input::is_key_down(KEY_A))
     {
         pos.x -= 1;
     }
-    if (ARES_Engine::Input::is_key_down(KEY_S))
+    if (Input::is_key_down(KEY_S))
     {
         pos.y += 1;
     }
-    if (ARES_Engine::Input::is_key_down(KEY_D))
+    if (Input::is_key_down(KEY_D))
     {
         pos.x += 1;
     }
 
-    pos.x = ARES_Engine::clamp((int)pos.x, 0, 1023);
-    pos.y = ARES_Engine::clamp((int)pos.y, 0, 1023);
+    pos.x = clamp((int)pos.x, 0, 1023);
+    pos.y = clamp((int)pos.y, 0, 1023);
 
-    auto color = ARES_Engine::Bitmap::Color::Blue;
-    ARES_Engine::Bitmap::set_pixel(pos, color);
+    auto color = Bitmap::Color::Blue;
+    Bitmap::set_pixel(pos, color);
 
     spr->set_position(pos);
     spr->update();

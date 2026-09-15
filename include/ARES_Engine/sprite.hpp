@@ -65,6 +65,8 @@ namespace ARES_Engine
             Pal_3 = 3  /**< Sprite palette 3. */
         };
 
+        uint16_t public_id = 0;
+
         /**
          * @brief Set the sprite position.
          *

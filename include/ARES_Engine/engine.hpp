@@ -39,13 +39,6 @@ namespace ARES_Engine::Engine
     };
 
     /**
-     * @brief Initialize the engine subsystem.
-     *
-     * Prepares engine state and any required VDP-related resources.
-     */
-    void initialize();
-
-    /**
      * @brief Load sprite graphics data from a .spr file.
      *
      * Allocates hardware sprite-data slots as required and returns a list
