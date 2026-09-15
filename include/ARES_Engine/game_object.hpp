@@ -68,7 +68,7 @@ namespace ARES_Engine
         Vector2i get_center() const; // Hitbox center
 
         // Collision
-        std::vector<Game_object *> get_collision(); // Return a list of all colliding objects
+        std::vector<Game_object *> get_collision(bool use_filter); // Return a list of all colliding objects
 
         // Sprite
         Sprite &get_sprite();
