@@ -12,12 +12,10 @@
 #include <memory>
 
 // Math ඞ
-// Collision -> Math
 // Color ඞ
-// Bitmap almost ඞ (scroll and image loading)
-// Tilemap
-// Sprite ඞ - add collision on/off
-// Engine not ඞ fix me plz im begging you 💀💀💀
+// Bitmap ඞ
+// Sprite ඞ
+// Engine ඞ
 // Input ඞ
 // World - very later
 // Animation - very very later

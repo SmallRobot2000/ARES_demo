@@ -35,6 +35,17 @@ New game:
     start lvl 0
 
 
+Ideja za entity:
+structura:
+pos x,y
+collision box?
+broj koristenih spritova, max 4
+anim frame num
+animation array/struct:
+    za svaki frame animacije:
+        za svaki sprite posebno spr0-3:
+            pozicija i ID slike prikazane
+    
 
 
 
