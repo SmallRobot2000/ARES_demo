@@ -16,6 +16,12 @@ namespace ARES_Engine
     class Resource_library
     {
     public:
+        Resource_library()
+        {
+            if(exists == true)
+                throw std::runtime_error("Object of class Resource_library alredy exists");
+            exists = true;
+        }
         template <typename T>
         using Asset_map =
             std::unordered_map<std::string, std::shared_ptr<const T>>;
@@ -70,5 +76,8 @@ namespace ARES_Engine
         Collection<Tileset_asset> tilesets;
         Collection<Tilemap_asset> tilemaps;
         Collection<Bitmap_asset> bitmaps;
+
+        private:
+            inline static bool exists = false;
     };
 }
