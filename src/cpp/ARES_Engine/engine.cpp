@@ -243,7 +243,7 @@ namespace ARES_Engine::Engine
         vdp_s0_load_palette(pal, col_cnt, (uint8_t)pal_num);
     }
 
-    void load_tile_data(std::filesystem::path filename, Engine::Layer layer)
+    Tile_set load_tile_set(std::filesystem::path filename, Engine::Layer layer)
     {
 
         if (layer != Engine::Layer::Tile0 && layer != Engine::Layer::Tile1)
@@ -269,16 +269,33 @@ namespace ARES_Engine::Engine
 
         file.close();
 
+        // Calculate firs available offset
+        auto off = find_free_tile_range(layer, tile_cnt);
+
+        if (!off)
+            throw std::runtime_error("No free tile range available");
+
         int ret;
         if (layer == Engine::Layer::Tile0)
-            ret = vdp_t0_load_til_file(filename.c_str(), 0, tile_cnt, 1);
+            ret = vdp_t0_load_til_file(filename.c_str(), off.value() * (8 * 8), tile_cnt, 1);
         else
-            ret = vdp_t1_load_til_file(filename.c_str(), 0, tile_cnt, 1);
+            ret = vdp_t1_load_til_file(filename.c_str(), off.value() * (8 * 8), tile_cnt, 1);
 
         if (ret != 0)
             throw std::runtime_error("Failed loading tile data");
+
+        // Sucsess
+        Tile_set tile_set;
+        tile_set.count = tile_cnt;
+        tile_set.layer = layer;
+        tile_set.start_id = off.value();
+        return tile_set;
     }
 
+    void free_tile_set(Tile_set tile_set)
+    {
+        free_tile_range(tile_set.layer, tile_set.start_id, tile_set.count);
+    }
     void load_tilemap(const std::filesystem::path &filename, int layer_id, Engine::Layer tile_layer)
     {
         if (tile_layer != Engine::Layer::Tile0 && tile_layer != Engine::Layer::Tile1)

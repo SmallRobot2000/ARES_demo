@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <filesystem>
-
+#include <optional>
 #define MAX_HW_ID 128
 
 /*
@@ -34,8 +34,20 @@ namespace ARES_Engine::Engine
      */
     struct Frame
     {
-        uint8_t size;      /**< Number of hardware sprite IDs used by this frame. */
-        uint8_t hw_ids[4]; /**< Hardware sprite IDs assigned to this frame. */
+        uint8_t size;      /** Number of hardware sprite IDs used by this frame. */
+        uint8_t hw_ids[4]; /** Hardware sprite IDs assigned to this frame. */
+    };
+
+    /**
+     * @brief Describes one logical tile set.
+     *
+     * A Tile_set may use one or more hardware tileset IDs, depending on its count.
+     */
+    struct Tile_set
+    {
+        uint16_t count;    /** Number of hardware tileset IDs used by this Tile_set. */
+        uint16_t start_id; /** First tile ID */
+        Layer layer;       /** Layer on whitch this tile set exists */
     };
 
     /**
@@ -75,8 +87,19 @@ namespace ARES_Engine::Engine
      * @param layer Layer to witch to load tile data
      *
      * @throws std::runtime_error if the file cannot be opened or read.
+     *
+     * @returns Tile_set structure that describes loaded tile set.
      */
-    void load_tile_data(std::filesystem::path filename, Engine::Layer layer);
+    Tile_set load_tile_set(std::filesystem::path filename, Engine::Layer layer);
+
+    /**
+     * @brief Release hardware tile-data resources used by a Tile_set.
+     *
+     * Marks all hardware IDs referenced by the supplied Tile_set as unused.
+     *
+     * @param tile_set Tile_set containing tile data descriptions to release.
+     */
+    void free_tile_set(Tile_set tile_set);
 
     /**
      * @brief Load a tile map layer by numeric layer ID.
@@ -160,5 +183,91 @@ namespace ARES_Engine::Engine
      * causing multiple-definition linker errors in C++17 and later.
      */
     inline bool _sprite_hw_id_used[128] = {};
+
+    inline bool _tiles0_hw_id_used[1024] = {};
+    inline bool _tiles1_hw_id_used[1024] = {};
+
+    std::optional<std::size_t> find_free_range(
+        const bool *used,
+        std::size_t size,
+        std::size_t n)
+    {
+        if (n == 0 || n > size)
+            return std::nullopt;
+
+        std::size_t count = 0;
+
+        for (std::size_t i = 0; i < size; ++i)
+        {
+            if (!used[i])
+            {
+                ++count;
+
+                if (count == n)
+                    return i - n + 1;
+            }
+            else
+            {
+                count = 0;
+            }
+        }
+
+        return std::nullopt;
+    }
+
+    std::optional<std::size_t> find_free_tile_range(
+        Engine::Layer layer,
+        std::size_t n)
+    {
+        const bool *used = nullptr;
+
+        switch (layer)
+        {
+        case Engine::Layer::Tile0:
+            used = _tiles0_hw_id_used;
+            break;
+
+        case Engine::Layer::Tile1:
+            used = _tiles1_hw_id_used;
+            break;
+
+        default:
+            return std::nullopt;
+        }
+
+        return find_free_range(used, 1024, n);
+    }
+
+    void free_tile_range(
+        Engine::Layer layer,
+        std::size_t offset,
+        std::size_t tile_cnt)
+    {
+        if (tile_cnt == 0 ||
+            offset >= 1024 ||
+            tile_cnt > 1024 - offset)
+        {
+            throw std::invalid_argument("Invalid tile range");
+        }
+
+        bool *used = nullptr;
+
+        switch (layer)
+        {
+        case Engine::Layer::Tile0:
+            used = _tiles0_hw_id_used;
+            break;
+
+        case Engine::Layer::Tile1:
+            used = _tiles1_hw_id_used;
+            break;
+
+        default:
+            throw std::invalid_argument("Invalid tile layer");
+        }
+
+        for (std::size_t i = offset; i < offset + tile_cnt; ++i)
+            used[i] = false;
+    }
 
 } // namespace ARES_Engine::Engine
