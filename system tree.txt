@@ -1,0 +1,214 @@
+ARES ENGINE - PROPOSED SYSTEM TREE
+
+This is a design plan, not a description of fully implemented classes.
+Existing: Sprite, Game_object declarations, Engine loading/layer functions,
+and Bitmap drawing functions. Animation, Scene, resource management, Tilemap,
+and Bitmap_layer below are proposed additions.
+
+OWNERSHIP AND DATA
+==================
+Owns = responsible for lifetime. Reference = uses something owned elsewhere.
+
+Game / Application
+|
++-- Resource_library                              [proposed]
+|   |   Shared assets; outlive every object/clip that uses them.
+|   |
+|   +-- Sprite_graphics
+|   |   +-- Source: .spr file
+|   |   +-- Loaded Engine::Frame descriptions
+|   |   +-- Sprite graphics-data slot allocations
+|   |   +-- Palette source: .pal file
+|   |   `-- Release with free_sprite_data() after all users are gone
+|   |
+|   +-- Animation_clips
+|   |   +-- "player_idle"
+|   |   |   +-- Loop: true
+|   |   |   +-- Reference to required Sprite_graphics
+|   |   |   `-- Animation_frames
+|   |   |       +-- Frame 0: duration 200 ms
+|   |   |       |   +-- Part [0]: body image, offset (0, 0)
+|   |   |       |   +-- Part [1]: weapon image, offset (12, 4)
+|   |   |       |   `-- Part [2]: shadow image, offset (0, 24)
+|   |   |       `-- Frame 1: duration 200 ms
+|   |   |           +-- Part [0]: body image, offset (0, -1)
+|   |   |           +-- Part [1]: weapon image, offset (12, 3)
+|   |   |           `-- Part [2]: shadow image, offset (0, 24)
+|   |   +-- "player_walk": more frames
+|   |   `-- "player_attack": non-looping frames
+|   |       Each part pose contains image reference, local offset, size,
+|   |       palette selection, visibility, scale, and flip settings.
+|   |       Clips contain data only; they do not own hardware Sprites.
+|   |
+|   +-- Tileset_assets
+|   |   +-- Source: .til file
+|   |   `-- Tile graphics and optional gameplay properties per tile type
+|   |
+|   +-- Tilemap_assets
+|   |   +-- Source: .map file
+|   |   +-- Reference to compatible tileset
+|   |   +-- Map dimensions and tile dimensions
+|   |   +-- Named layers containing grids of tile IDs / attributes
+|   |   `-- Optional collision grid / metadata             [new data support]
+|   |
+|   `-- Bitmap_assets
+|       +-- Source: .b0 file
+|       `-- Optional cached pixels for runtime redraw      [new data support]
+|
+`-- Active Scene                                        [proposed]
+    |
+    +-- Camera
+    |   `-- World position used to calculate screen positions / scrolling
+    |
+    +-- Game_objects
+    |   +-- Player: Game_object
+    |   |   +-- World position
+    |   |   +-- Hitbox in local coordinates
+    |   |   +-- Type, ID, active, name, details, collision filter
+    |   |   +-- Sprites: owns live hardware sprite instances
+    |   |   |   +-- [0] Body
+    |   |   |   +-- [1] Weapon
+    |   |   |   `-- [2] Shadow
+    |   |   +-- Default part poses for static / unanimated appearance
+    |   |   `-- Animator: optional per-object playback state
+    |   |       +-- Reference to current Animation_clip
+    |   |       +-- Current frame index
+    |   |       +-- Elapsed time within frame
+    |   |       `-- Playing / paused / finished state
+    |   |
+    |   +-- Enemy: own sprites and Animator, may share clips with other enemies
+    |   +-- Chest: one or more sprites; animation optional
+    |   `-- Trigger area: hitbox and gameplay data; zero sprites
+    |
+    +-- Tilemaps: world geometry represented as grids
+    |   `-- Level: Tilemap instance
+    |       +-- Reference to Tilemap_asset
+    |       +-- World origin
+    |       +-- Collision data / queries independent of drawing
+    |       `-- Visual layer bindings
+    |           +-- Ground map layer -> Tile0 (T0)
+    |           |   +-- Reference to tileset loaded into T0
+    |           |   +-- Visible / enabled state
+    |           |   `-- Scroll offset derived from camera and map origin
+    |           `-- Decoration map layer -> Tile1 (T1)
+    |               +-- Reference to tileset loaded into T1
+    |               +-- Visible / enabled state
+    |               `-- Scroll offset / optional parallax factor
+    |
+    +-- Bitmap_layer: one shared B0 pixel surface
+    |   +-- Enabled state
+    |   +-- Layer scroll offset
+    |   +-- Background image placement(s): asset reference + destination
+    |   +-- Drawing commands: pixels, rectangles, lines
+    |   `-- Optional retained draw items / dirty regions for redraw
+    |
+    `-- Collision_system
+        +-- Game_object vs Game_object: world-space hitboxes and filters
+        `-- Game_object vs Tilemap: query nearby solid cells
+
+HOW THE PARTS CONNECT
+====================
+
+Animation_frame.parts[i] ------> Game_object.sprites[i]
+Part image reference ----------> loaded sprite graphics-data location
+Animator ---------------------> shared Animation_clip (does not own it)
+Tilemap layer -----------------> T0 or T1 map memory + compatible tile graphics
+Bitmap image / draw command ---> pixels written into the shared B0 surface
+
+A Sprite is one hardware display instance. An image is graphics data used by
+that instance. Multiple Sprites can display the same image. An animation can
+change several Sprite images and offsets together without allocating Sprites.
+
+Example: player at (100, 50), camera at (20, 10)
+|
++-- Body:   offset (0, 0)   -> screen position (80, 40)
++-- Weapon: offset (12, 4)  -> screen position (92, 44)
+`-- Shadow: offset (0, 24)  -> screen position (80, 64)
+
+Screen position = object world position + part offset - camera position.
+World hitbox = local hitbox translated by object world position.
+Camera movement does not change collision coordinates.
+
+FRAME UPDATE FLOW
+=================
+
+Game loop
+|
++-- 1. Read input and elapsed time
++-- 2. Update gameplay and desired object movement
++-- 3. Query / resolve object and tilemap collisions
++-- 4. Update camera
++-- 5. Advance each active object's Animator
+|       Consume expired frame durations, preserving leftover time.
+|       Loop looping clips; hold final pose when non-looping clips finish.
+|       Calling play() with the already-playing clip need not restart it.
++-- 6. Apply current poses to object-owned Sprites
+|       Use stable part indices across clips; hide unused parts.
+|       Apply camera-relative position, image, palette, size, scale and flips.
+|       Static objects use their default poses. Inactive objects hide sprites.
++-- 7. Prepare T0 / T1 / B0 scroll offsets and any changed content
+|       Static tilemaps and bitmap backgrounds do not need reloading each frame.
+`-- 8. Submit display updates at the appropriate hardware timing
+        Sprite::update(), layer offsets, changed map cells / bitmap regions.
+        Keep disk loading outside the normal per-frame update.
+
+SCENE LIFETIME
+==============
+
+Load scene
++-- Acquire sprite graphics and palettes
++-- Load tilesets and selected map layers into T0 / T1
++-- Draw initial bitmap background into B0
++-- Create objects and allocate their required Sprite slots once
+`-- Select initial clips / static poses and enable required layers
+
+Unload scene
++-- Destroy objects (release Sprite instances) and stop animation users
++-- Remove tilemap / bitmap bindings and clear or disable outgoing visuals
+`-- Release assets only after no remaining scene or clip needs them
+
+CURRENT HARDWARE / API CONSTRAINTS
+=================================
+
++-- Sprite allocator currently tracks 64 live sprite attribute IDs.
+|   Count simultaneous body / weapon / shadow parts across all objects.
++-- Engine tracks 128 sprite graphics-data slots separately.
+|   Graphics slots and live sprite IDs are different resources.
++-- Sprite must become noncopyable with safe ownership-transferring moves
+|   before storing it in std::vector<Sprite>. Current implicit copies share IDs.
++-- Current renderer exposes two tile layers (T0, T1) and one bitmap layer (B0).
+|   Extra logical map layers require composition or another rendering strategy.
+|   Tree order does not define hardware drawing priority.
++-- Current load_tilemap() copies a selected file layer directly to hardware.
+|   A CPU-side tile grid, get/set-cell API, and collision metadata are additions.
++-- Current bitmap API draws directly into B0; images are not movable objects.
+|   Moving an individual image requires restoring old pixels and redrawing
+|   affected items. Scrolling B0 moves the entire layer together.
++-- Palette selections reference shared hardware palettes.
+|   Loading a new palette changes every sprite using that palette slot.
+`-- Keep part ordering consistent across one object's clips.
+    Begin with one Animator per object; add tracks later only if parts need
+    independent timing (for example, walking legs plus an attacking torso).
+
+SUGGESTED HEADER ORGANIZATION
+=============================
+
+include/ARES_Engine/
++-- engine.hpp                Existing loading and hardware layer interface
++-- sprite.hpp                Sprite: owns one hardware sprite instance
++-- animation.hpp             Part_pose, Animation_frame, Animation_clip, Animator
++-- game_object.hpp           Gameplay state, position, hitbox, Sprites, Animator
++-- resources.hpp             Shared asset ownership and lookup               [new]
++-- scene.hpp                 Scene object / tilemap / bitmap ownership       [new]
++-- camera.hpp                World-to-screen position handling              [new]
++-- tilemap.hpp               Tilemap data, instances, layer bindings        [new]
++-- collision.hpp             Object and tile-grid collision queries         [new]
+`-- bitmap/
+    +-- bitmap.hpp            Existing immediate drawing functions
+    +-- color.hpp             Existing color type
+    `-- bitmap_layer.hpp      B0 content, placement and redraw management     [new]
+
+Tilemaps and bitmap backgrounds belong to the scene alongside Game_objects.
+An individual tile or bitmap pixel does not need its own Game_object.
+An interactive item drawn over the map (door, enemy, pickup) can be a
+Game_object, with tilemap cells updated too if its gameplay requires that.
