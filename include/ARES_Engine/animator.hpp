@@ -3,7 +3,9 @@
 
 #include <ARES_Engine/animation.hpp>
 #include <ARES_Engine/sprite.hpp>
+#include <ARES_Engine/engine.hpp>
 
+#include <stdexcept>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -13,8 +15,26 @@ namespace ARES_Engine
 {
     class Animator
     {
+#define ANIMATOR_MAX_USED_SPRITES 16
     public:
-        Animator(int used_sprites = 1);
+        Animator(int used_sprites = 1)
+        {
+            if (used_sprites < 0 || used_sprites > ANIMATOR_MAX_USED_SPRITES)
+                throw std::invalid_argument("Argument used_sprites must be greater or equal to zero and less than " + ANIMATOR_MAX_USED_SPRITES);
+
+            sprites = {};
+            for (int i = 0; i < used_sprites; i++)
+            {
+                sprites.push_back(Sprite());
+            }
+
+            for (auto sprite : sprites)
+            {
+                sprite.update(); // Update their vivsibility
+            }
+
+            this->pos = Vector2i(0, 0);
+        }
 
         // Set/change the animation clip.
         void set_clip(std::shared_ptr<const Animation_clip> clip);
@@ -30,7 +50,7 @@ namespace ARES_Engine
         void update(std::uint32_t delta_ms);
 
         // Apply current frame without advancing time. ?
-        void apply() const;
+        void apply();
 
         // State queries.
         bool is_playing() const;
@@ -46,7 +66,13 @@ namespace ARES_Engine
         std::vector<Sprite> sprites;
 
         std::size_t current_frame = 0;
+        std::size_t current_duration = 0;
         std::uint32_t elapsed_ms = 0;
+
+        bool loop = false;
+        std::size_t num_frames = 0;
+
+        Vector2i pos;
 
         bool playing = false;
         bool paused = false;
