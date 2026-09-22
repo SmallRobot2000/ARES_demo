@@ -42,6 +42,7 @@ namespace ARES_Engine
     {
         // An empty clip has no pose to apply; the Animator must handle it.
         std::vector<Animation_frame> frames;
+        std::string name = "";
         bool loop = true; // Otherwise finish by holding the last frame.
     };
 

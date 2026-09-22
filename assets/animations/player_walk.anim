@@ -1,0 +1,307 @@
+{
+    "frames": [
+        {
+            "duration_ms": 100,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 0
+                    },
+                    "offset": [
+                        0,
+                        -32
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 8
+                    },
+                    "offset": [
+                        0,
+                        -48
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        },
+        {
+            "duration_ms": 100,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 1
+                    },
+                    "offset": [
+                        0,
+                        -32
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 8
+                    },
+                    "offset": [
+                        0,
+                        -49
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        },
+        {
+            "duration_ms": 100,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 2
+                    },
+                    "offset": [
+                        0,
+                        -32
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 8
+                    },
+                    "offset": [
+                        0,
+                        -48
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        },
+        {
+            "duration_ms": 100,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 3
+                    },
+                    "offset": [
+                        0,
+                        -32
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 8
+                    },
+                    "offset": [
+                        0,
+                        -47
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        },
+        {
+            "duration_ms": 100,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 4
+                    },
+                    "offset": [
+                        0,
+                        -32
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 8
+                    },
+                    "offset": [
+                        0,
+                        -48
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        },
+        {
+            "duration_ms": 100,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 5
+                    },
+                    "offset": [
+                        0,
+                        -32
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 8
+                    },
+                    "offset": [
+                        0,
+                        -49
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        },
+        {
+            "duration_ms": 100,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 6
+                    },
+                    "offset": [
+                        0,
+                        -32
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 8
+                    },
+                    "offset": [
+                        0,
+                        -48
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        },
+        {
+            "duration_ms": 100,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 7
+                    },
+                    "offset": [
+                        0,
+                        -32
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "player",
+                        "frame": 8
+                    },
+                    "offset": [
+                        0,
+                        -47
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        }
+    ],
+    "loop": true,
+    "name": "player_walk",
+    "schema_version": 1,
+    "slots": [
+        "player_body",
+        "player_head"
+    ]
+}

@@ -1,10 +1,13 @@
 #include <ARES_Engine/engine.hpp>
+#include <ARES_Engine/animation.hpp>
+#include <nlohmann/json.hpp>
 #include <custom_formats.h>
 #include <vdp_api.h>
 #include <stdexcept>
 #include <filesystem>
 #include <fstream>
 #include <string.h>
+#include <utility>
 namespace fs = std::filesystem;
 
 namespace ARES_Engine::Engine
@@ -454,6 +457,108 @@ namespace ARES_Engine::Engine
 
         if (ret != 0)
             throw std::runtime_error("Failed loadingfile: " + filename.string());
+    }
+
+    using json = nlohmann::json;
+
+    struct Animation_clip load_animation_data(const std::filesystem::path &filename)
+    {
+        struct Animation_clip clip;
+
+        std::ifstream file(filename);
+
+        // failed to open
+        if (!file)
+        {
+            throw std::runtime_error("Failed to open animation: " + filename.string());
+        }
+
+        // Parse json
+        json data = json::parse(file);
+
+        // metadata
+        clip.loop = data.at("loop").get<bool>();
+        clip.name = data.at("loop").get<std::string>();
+
+        // Sprite slots that are used
+        std::vector<std::string> slots = data.at("slots").get<std::vector<std::string>>();
+        int slot_num = slots.size();
+
+        for (const auto &json_frame : data.at("frames"))
+        {
+            Animation_frame tmp_frame;
+
+            tmp_frame.duration_ms = json_frame.at("duration_ms").get<int>();
+
+            const auto &parts = json_frame.at("parts");
+            for (const auto &json_part : parts)
+            {
+                Part_pose tmp_part;
+
+                tmp_part.flip_x = json_part.at("flip_x").get<bool>();
+                tmp_part.flip_y = json_part.at("flip_y").get<bool>();
+
+                tmp_part.visible = json_part.at("visible").get<bool>();
+
+                std::string tmp_str = json_part.at("scale").get<std::string>();
+                if (tmp_str == "x1")
+                    tmp_part.scale = Sprite::Scale::x1;
+                else if (tmp_str == "x2")
+                    tmp_part.scale = Sprite::Scale::x2;
+                else if (tmp_str == "x4")
+                    tmp_part.scale = Sprite::Scale::x4;
+                else if (tmp_str == "x8")
+                    tmp_part.scale = Sprite::Scale::x8;
+                else
+                    throw std::runtime_error("In animation file '" + filename.string() + "' invalid value of scale");
+
+                tmp_str = json_part.at("size").get<std::string>();
+                if (tmp_str == "x16")
+                    tmp_part.size = Sprite::Size::x16;
+                else if (tmp_str == "x32")
+                    tmp_part.size = Sprite::Size::x32;
+                else
+                    throw std::runtime_error("In animation file '" + filename.string() + "' invalid value of size");
+
+                tmp_str == json_part.at("palette").get<std::string>();
+
+                if (tmp_str == "Pal_0")
+                    tmp_part.palette = Sprite::Palette::Pal_0;
+                else if (tmp_str == "Pal_1")
+                    tmp_part.palette = Sprite::Palette::Pal_1;
+                else if (tmp_str == "Pal_2")
+                    tmp_part.palette = Sprite::Palette::Pal_2;
+                else if (tmp_str == "Pal_3")
+                    tmp_part.palette = Sprite::Palette::Pal_3;
+                else
+                    throw std::runtime_error("In animation file '" + filename.string() + "' invalid value of palette");
+
+                const auto &offset = json_part.at("offset");
+
+                tmp_part.offset = Vector2i(
+                    offset.at(0).get<int>(),
+                    offset.at(1).get<int>());
+
+                const auto &json_image = json_part.at("image");
+
+                std::string sprite_graphics_name = json_image.at("asset").get<std::string>();
+                int sprite_graphics_frame = json_image.at("frame").get<int>();
+
+                /* TODO add resource manager stuff here so it works - magic*/
+                /* sprite_graphics_name -> name of class the Sprite_graphics asset*/
+                /* sprite_graphics_frame -> frame offset from frames vector in the latter*/
+                /* FOR NOW just set tmp_part.image_id to sprite_graphics_frame*size */
+                tmp_part.image_id = sprite_graphics_frame * 4; // TODO!!!
+
+                // tmp_part is done
+                tmp_frame.parts.push_back(std::move(tmp_part));
+            }
+
+            // tmp_frame is done
+            clip.frames.push_back(std::move(tmp_frame));
+        }
+
+        return clip;
     }
 
 }

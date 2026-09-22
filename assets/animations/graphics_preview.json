@@ -1,0 +1,18 @@
+{
+    "assets": {
+        "player": {
+            "format": "ares-spr",
+            "images": 16,
+            "layout": "compact",
+            "palette_entries": 256,
+            "side": 32,
+            "source": "sprites/ae4ce83e-4c89-4684-ae39-98d7060cc003.spr"
+        }
+    },
+    "palette_banks": [
+        "player",
+        null,
+        null,
+        null
+    ]
+}
