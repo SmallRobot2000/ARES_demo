@@ -42,9 +42,9 @@ void start(int argc, char **argv)
     if (!Input::initialize())
         return;
 
-    auto loaded_frames = Engine::load_sprite_data("./assets/test.spr");
+    auto loaded_frames = Engine::load_sprite_data("./assets/spr/test.spr");
 
-    Engine::load_sprite_palette("./assets/test1.pal", Sprite::Palette::Pal_0);
+    Engine::load_sprite_palette("./assets/palette/test1.pal", Sprite::Palette::Pal_0);
     printf("Frame[0] = %d", loaded_frames[0].hw_ids[1]);
 
     spr = new Sprite();
@@ -56,13 +56,13 @@ void start(int argc, char **argv)
     spr->set_position(Vector2i(32, 32));
     spr->update();
 
-    Engine::load_tile_set("assets/test.til", Engine::Layer::Tile0);
-    Engine::load_tile_set("assets/test.til", Engine::Layer::Tile1);
+    Engine::load_tile_set("assets/tiles/til/test.til", Engine::Layer::Tile0);
+    Engine::load_tile_set("assets/tiles/til/test.til", Engine::Layer::Tile1);
 
-    Engine::load_tilemap("assets/test.map", "Tile Layer 1", Engine::Layer::Tile0);
-    Engine::load_tilemap("assets/test.map", "Tile Layer 1", Engine::Layer::Tile1);
+    Engine::load_tilemap("assets/map/test.map", "Tile Layer 1", Engine::Layer::Tile0);
+    Engine::load_tilemap("assets/map/test.map", "Tile Layer 1", Engine::Layer::Tile1);
 
-    Engine::load_bitmap_data("assets/bitmap1.b0", Vector2i(0, 0));
+    Engine::load_bitmap_data("assets/b0/bitmap1.b0", Vector2i(0, 0));
 
     Engine::enable_layer(Engine::Layer::Tile0);
     Engine::enable_layer(Engine::Layer::Tile1);
