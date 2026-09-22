@@ -56,8 +56,8 @@ void start(int argc, char **argv)
     spr->set_position(Vector2i(32, 32));
     spr->update();
 
-    Engine::load_tile_data("assets/test.til", Engine::Layer::Tile0);
-    Engine::load_tile_data("assets/test.til", Engine::Layer::Tile1);
+    Engine::load_tile_set("assets/test.til", Engine::Layer::Tile0);
+    Engine::load_tile_set("assets/test.til", Engine::Layer::Tile1);
 
     Engine::load_tilemap("assets/test.map", "Tile Layer 1", Engine::Layer::Tile0);
     Engine::load_tilemap("assets/test.map", "Tile Layer 1", Engine::Layer::Tile1);

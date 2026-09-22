@@ -187,7 +187,7 @@ namespace ARES_Engine::Engine
     inline bool _tiles0_hw_id_used[1024] = {};
     inline bool _tiles1_hw_id_used[1024] = {};
 
-    std::optional<std::size_t> find_free_range(
+    inline std::optional<std::size_t> find_free_range(
         const bool *used,
         std::size_t size,
         std::size_t n)
@@ -215,7 +215,7 @@ namespace ARES_Engine::Engine
         return std::nullopt;
     }
 
-    std::optional<std::size_t> find_free_tile_range(
+    inline std::optional<std::size_t> find_free_tile_range(
         Engine::Layer layer,
         std::size_t n)
     {
@@ -238,7 +238,7 @@ namespace ARES_Engine::Engine
         return find_free_range(used, 1024, n);
     }
 
-    void free_tile_range(
+    inline void free_tile_range(
         Engine::Layer layer,
         std::size_t offset,
         std::size_t tile_cnt)
