@@ -1,5 +1,7 @@
 #pragma once
 #include <ARES_Engine/sprite.hpp>
+#include <ARES_Engine/animation.hpp>
+#include <ARES_Engine/resource_library.hpp>
 #include <vector>
 #include <string>
 #include <filesystem>
@@ -64,7 +66,7 @@ namespace ARES_Engine::Engine
      *         validated, or if insufficient hardware sprite-data resources
      *         are available.
      */
-    std::vector<Engine::Frame> load_sprite_data(std::filesystem::path filename);
+    std::vector<Engine::Frame> load_sprite_data(const std::filesystem::path &filename);
 
     /**
      * @brief Load a sprite palette from a .pal file.
@@ -170,6 +172,8 @@ namespace ARES_Engine::Engine
     void disable_layer(Engine::Layer layer);
 
     void set_layer_offset(Vector2i offset, Engine::Layer layer);
+
+    struct Animation_clip load_animation_clip(const std::filesystem::path &filename, Resource_library &rl);
 
     /**
      * @brief Tracks allocation of hardware sprite-data IDs.

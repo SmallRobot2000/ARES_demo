@@ -1,5 +1,7 @@
 #include <ARES_Engine/engine.hpp>
 #include <ARES_Engine/animation.hpp>
+#include <ARES_Engine/resource_library.hpp>
+#include <ARES_Engine/sprite_graphics.hpp>
 #include <nlohmann/json.hpp>
 #include <custom_formats.h>
 #include <vdp_api.h>
@@ -85,7 +87,7 @@ namespace ARES_Engine::Engine
         array.clear();
     }
 
-    std::vector<Engine::Frame> load_sprite_data(std::filesystem::path filename)
+    std::vector<Engine::Frame> load_sprite_data(const std::filesystem::path &filename)
     {
 
         if (!fs::exists(filename) || !fs::is_regular_file(filename))
@@ -139,38 +141,57 @@ namespace ARES_Engine::Engine
 
         size_t sprite_data_size = spr_cnt * (sprite_size * sprite_size);
 
-        uint8_t *sprite_data = (uint8_t *)malloc(sprite_data_size);
+        std::vector<uint8_t> sprite_data(sprite_data_size);
 
-        file.read((char *)sprite_data, sprite_data_size);
+        file.read(reinterpret_cast<char *>(sprite_data.data()), sprite_data_size);
 
         if (!file)
-        {
-            free(sprite_data);
             throw std::runtime_error("The file doth resist our quest; to read it hath proved vain. [Reading file failed]");
-        }
-
-        uint16_t frame16_cnt = sprite_size == 16 ? spr_cnt : spr_cnt * 4;
 
         int hw_id;
-        for (int i = 0; i < frame16_cnt; i++)
+        for (int i = 0; i < spr_cnt; i++)
         {
             for (int n = 0; n < MAX_HW_ID; n++)
             {
                 hw_id = -1;
+                if (sprite_size == 32 && n % 4 != 0)
+                    continue; // Make sure the sprite is 4 ids aligned
+
                 if (Engine::_sprite_hw_id_used[n] == false)
                 {
-                    Engine::_sprite_hw_id_used[n] = true;
-                    hw_id = n;
-                    break;
+                    if (sprite_size == 32)
+                    {
+                        if (Engine::_sprite_hw_id_used[n + 1] == false && Engine::_sprite_hw_id_used[n + 2] == false && Engine::_sprite_hw_id_used[n + 3] == false)
+                        {
+                            Engine::_sprite_hw_id_used[n] = true;
+                            Engine::_sprite_hw_id_used[n + 1] = true;
+                            Engine::_sprite_hw_id_used[n + 2] = true;
+                            Engine::_sprite_hw_id_used[n + 3] = true;
+
+                            hw_id = n;
+                            break;
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        Engine::_sprite_hw_id_used[n] = true;
+
+                        hw_id = n;
+                        break;
+                    }
                 }
             }
             if (hw_id == -1)
-            {
-                free(sprite_data);
                 throw std::runtime_error("Fie, the sprite-memory doth overflow its bounds, and now stands empty of room. [Out of sprite data memory]");
-            }
 
-            vdp_s0_load_sprite_data(&sprite_data[i * (16 * 16)], 16 * 16, hw_id * (16 * 16));
+            // Valid 4 id aligned hw_id
+
+
+            vdp_s0_load_sprite_data((sprite_data.data() + i * (sprite_size * sprite_size)), sprite_size * sprite_size, hw_id * (16 * 16));
 
             if (sprite_size == 16)
             {
@@ -178,15 +199,15 @@ namespace ARES_Engine::Engine
                 frames.push_back(frame);
             }
             else
-            {                                // 32
-                frame.hw_ids[i % 4] = hw_id; // One of four frames inside one sprite
-                if (i % 4 == 3)              // Last frame of four frames for one sprite
-                {
-                    frames.push_back(frame);
-                }
+            {                            // 32
+                frame.hw_ids[0] = hw_id; // Save all 4 used ids
+                frame.hw_ids[1] = hw_id + 1;
+                frame.hw_ids[2] = hw_id + 2;
+                frame.hw_ids[3] = hw_id + 3;
+
+                frames.push_back(frame);
             }
         }
-        free(sprite_data);
         return frames;
     }
 
@@ -461,7 +482,7 @@ namespace ARES_Engine::Engine
 
     using json = nlohmann::json;
 
-    struct Animation_clip load_animation_data(const std::filesystem::path &filename)
+    struct Animation_clip load_animation_clip(const std::filesystem::path &filename, Resource_library &rl)
     {
         struct Animation_clip clip;
 
@@ -478,7 +499,7 @@ namespace ARES_Engine::Engine
 
         // metadata
         clip.loop = data.at("loop").get<bool>();
-        clip.name = data.at("loop").get<std::string>();
+        clip.name = data.at("name").get<std::string>();
 
         // Sprite slots that are used
         std::vector<std::string> slots = data.at("slots").get<std::vector<std::string>>();
@@ -520,7 +541,7 @@ namespace ARES_Engine::Engine
                 else
                     throw std::runtime_error("In animation file '" + filename.string() + "' invalid value of size");
 
-                tmp_str == json_part.at("palette").get<std::string>();
+                tmp_str = json_part.at("palette").get<std::string>();
 
                 if (tmp_str == "Pal_0")
                     tmp_part.palette = Sprite::Palette::Pal_0;
@@ -543,12 +564,11 @@ namespace ARES_Engine::Engine
 
                 std::string sprite_graphics_name = json_image.at("asset").get<std::string>();
                 int sprite_graphics_frame = json_image.at("frame").get<int>();
+                //printf("Frame anim aaa %d\n", sprite_graphics_frame);
 
-                /* TODO add resource manager stuff here so it works - magic*/
-                /* sprite_graphics_name -> name of class the Sprite_graphics asset*/
-                /* sprite_graphics_frame -> frame offset from frames vector in the latter*/
-                /* FOR NOW just set tmp_part.image_id to sprite_graphics_frame*size */
-                tmp_part.image_id = sprite_graphics_frame * 4; // TODO!!!
+                // Magic
+                auto sprite_graphics = rl.sprite_graphics.get(sprite_graphics_name).get();
+                tmp_part.image_id = sprite_graphics->get_frames().at(sprite_graphics_frame).hw_ids[0];
 
                 // tmp_part is done
                 tmp_frame.parts.push_back(std::move(tmp_part));

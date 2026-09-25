@@ -1,15 +1,30 @@
 // Temp include to know what has been made and what has not been made yet
-#include <ARES_Engine/math/vector2i.hpp> //Vector2i
-#include <ARES_Engine/math/vector2f.hpp> //Vector2f
-#include <ARES_Engine/math/math.hpp>     //Math functions
-#include <ARES_Engine/bitmap/bitmap.hpp> //Bitmap
-#include <ARES_Engine/bitmap/color.hpp>  //Color
-#include <ARES_Engine/input.hpp>         //Input
-#include <ARES_Engine/engine.hpp>        //Engine
-#include <ARES_Engine/sprite.hpp>        //Sprite
+#include <ARES_Engine/math/vector2i.hpp>    //Vector2i
+#include <ARES_Engine/math/vector2f.hpp>    //Vector2f
+#include <ARES_Engine/math/math.hpp>        //Math functions
+#include <ARES_Engine/bitmap/bitmap.hpp>    //Bitmap
+#include <ARES_Engine/bitmap/color.hpp>     //Color
+#include <ARES_Engine/input.hpp>            //Input
+#include <ARES_Engine/engine.hpp>           //Engine
+#include <ARES_Engine/sprite.hpp>           //Sprite
+#include <ARES_Engine/animation.hpp>        //Clip
+#include <ARES_Engine/animator.hpp>         //Anim
+#include <ARES_Engine/resource_library.hpp> //Resources
+#include <ARES_Engine/sprite_graphics.hpp>  //Sprite assets
 
 #include <app.h>
 #include <memory>
+#include <chrono>
+#include <cstdint>
+
+inline std::uint64_t get_ticks_ms()
+{
+    using namespace std::chrono;
+
+    return duration_cast<milliseconds>(
+               steady_clock::now().time_since_epoch())
+        .count();
+}
 
 // Math ඞ
 // Color ඞ
@@ -26,7 +41,8 @@
 using namespace ARES_Engine;
 
 Sprite *spr;
-
+Sprite *spr_1;
+Animator *anim_0;
 void start(int argc, char **argv)
 {
 
@@ -42,20 +58,6 @@ void start(int argc, char **argv)
     if (!Input::initialize())
         return;
 
-    auto loaded_frames = Engine::load_sprite_data("./assets/spr/test.spr");
-
-    Engine::load_sprite_palette("./assets/palette/test1.pal", Sprite::Palette::Pal_0);
-    printf("Frame[0] = %d", loaded_frames[0].hw_ids[1]);
-
-    spr = new Sprite();
-    spr->set_visible(true);
-    spr->set_frame(0);
-    spr->set_scale(Sprite::Scale::x2);
-    spr->set_palette(Sprite::Palette::Pal_0);
-    spr->set_size(Sprite::Size::x32);
-    spr->set_position(Vector2i(32, 32));
-    spr->update();
-
     Engine::load_tile_set("assets/tiles/til/test.til", Engine::Layer::Tile0);
     Engine::load_tile_set("assets/tiles/til/test.til", Engine::Layer::Tile1);
 
@@ -64,9 +66,24 @@ void start(int argc, char **argv)
 
     Engine::load_bitmap_data("assets/b0/bitmap1.b0", Vector2i(0, 0));
 
+    Resource_library rl;
+    // rl.sprite_graphics.add("player", )
+    auto spr_grp = std::make_shared<Sprite_graphics>("player", "assets/test/player.spr", "assets/test/player.pal");
+    rl.sprite_graphics.add("player", spr_grp);
+
+    auto clip_0 = std::make_shared<Animation_clip>(Engine::load_animation_clip("assets/animations/player_walk.anim", rl));
+    rl.animations.add("player_walk", clip_0);
+
+    anim_0 = new Animator(2);
+    anim_0->set_clip(rl.animations.get("player_walk"));
+    anim_0->set_pos(Vector2i(100, 100));
+    anim_0->play();
+
     Engine::enable_layer(Engine::Layer::Tile0);
     Engine::enable_layer(Engine::Layer::Tile1);
-    //  Engine::free_sprite_data(loaded_frames);
+    Engine::enable_layer(Engine::Layer::Sprite);
+    // while(1);
+    //   Engine::free_sprite_data(loaded_frames);
 
     // scener_run_file("assets/scene1.sen");
 }
@@ -96,11 +113,12 @@ void loop()
     pos.x = clamp((int)pos.x, 0, 1023);
     pos.y = clamp((int)pos.y, 0, 1023);
 
+    anim_0->set_pos(pos);
+    anim_0->update(16);
+    anim_0->apply();
+
     auto color = Bitmap::Color::Blue;
     Bitmap::set_pixel(pos, color);
-
-    spr->set_position(pos);
-    spr->update();
 
     while (vdp_is_v_blank())
         ;

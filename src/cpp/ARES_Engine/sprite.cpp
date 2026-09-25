@@ -1,9 +1,9 @@
 #include <ARES_Engine/sprite.hpp>
 #include <stdexcept>
+#include <utility>
 
 namespace ARES_Engine
 {
-    bool Sprite::m_used_ids[64] = {};
 
     Sprite::Sprite()
     {
@@ -39,6 +39,16 @@ namespace ARES_Engine
         m_used_ids[this->id] = false;
     }
 
+    Sprite::Sprite(Sprite &&other) noexcept
+        : spr(other.spr),
+          id(std::exchange(other.id, -1))
+    {
+    }
+
+    int Sprite::get_hw_id()
+    {
+        return this->id;
+    }
     void Sprite::set_position(const Vector2i &position)
     {
         this->spr.x_pos = position.x;
@@ -65,8 +75,7 @@ namespace ARES_Engine
     }
     void Sprite::set_frame(uint8_t frame_id)
     {
-
-        this->spr.offset = frame_id * (16 * 16); // Frame ids are aligned to 16x16 sprite ids
+        this->spr.offset = (uint16_t)(frame_id * (16 * 16))/16; // Frame ids are aligned to 16x16 sprite ids, and offset is 16 byte alligned
     }
 
     void Sprite::set_size(Size pixel_size)

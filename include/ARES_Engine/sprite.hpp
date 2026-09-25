@@ -30,6 +30,14 @@ namespace ARES_Engine
          */
         ~Sprite();
 
+        // Prevent copying
+        Sprite(const Sprite &) = delete;
+        Sprite &operator=(const Sprite &) = delete;
+
+        // Allow moving
+        Sprite(Sprite &&other) noexcept;
+        Sprite &operator=(Sprite &&other) noexcept;
+
         /**
          * @brief Sprite scale factor.
          *
@@ -65,7 +73,12 @@ namespace ARES_Engine
             Pal_3 = 3  /**< Sprite palette 3. */
         };
 
-        uint16_t public_id = 0;
+        /**
+         * @brief Get the hardware ID of the sprite
+         *
+         * @returns hardware ID
+         */
+        int get_hw_id();
 
         /**
          * @brief Set the sprite position.
@@ -201,7 +214,7 @@ namespace ARES_Engine
          *
          * Shared by all Sprite instances.
          */
-        static bool m_used_ids[64];
+        inline static bool m_used_ids[64] = {};
 
         /**
          * @brief Hardware sprite attribute structure.

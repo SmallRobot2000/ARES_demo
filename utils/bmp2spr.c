@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
     }
 
     // Write palette
-    if (fwrite(spr_pal, 2, 256, fd_spr) != 256)
+    if (fwrite(spr_pal, 2, bmp_pal_num_colors, fd_spr) != bmp_pal_num_colors)
     {
         perror("Error writing to spr file");
         free(spr_pal);
@@ -242,33 +242,41 @@ int main(int argc, char *argv[])
     }
 
     // Generate Sprite data from image
-    uint8_t *spr_data;
-    spr_data = malloc(bmp_width * bmp_height); // Same size as image, but diferent aragement
+
     int frames_x = bmp_width / size;
     int frames_y = bmp_height / size;
-    uint32_t spr_data_off = 0;
-    uint32_t frame_in = 0;
+
+    size_t spr_data_size =
+        (size_t)bmp_width * bmp_height;
+
+    uint8_t *spr_data = malloc(spr_data_size);
+
+    if (!spr_data)
+    {
+        perror("Failed to allocate sprite data");
+
+        // Release other allocated resources here.
+        return 1;
+    }
+
+    size_t spr_data_off = 0;
 
     for (int frame_y = 0; frame_y < frames_y; frame_y++)
     {
         for (int frame_x = 0; frame_x < frames_x; frame_x++)
         {
-            frame_in = (frame_x * size) + (frame_y * bmp_width);
-            for (int n = 0; n < size * size; n++)
+
+            for (int y = 0; y < size; y++)
             {
-
-                /*
-                if (frame_x == 0 && frame_y == 0)
+                for (int x = 0; x < size; x++)
                 {
-                    printf("DEBUG: frame_in %d, spr_data_off %d n: %d\n", frame_in, spr_data_off, n);
-                }
-                */
-                spr_data[spr_data_off] = bmp_image[frame_in];
+                    int src_x = frame_x * size * size + x;
+                    int src_y = frame_y * size * size + y;
 
-                frame_in++;
-                if (frame_in % size == 0)
-                    frame_in += bmp_width - size;
-                spr_data_off++;
+                    size_t src_offset = (size_t)src_y * bmp_width + src_x;
+
+                    spr_data[spr_data_off++] = bmp_image[src_offset];
+                }
             }
         }
     }

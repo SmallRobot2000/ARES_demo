@@ -17,20 +17,22 @@ namespace ARES_Engine
         this->paused = false;
         this->finished = false;
 
-        bool loop = this->clip.get()->loop;
-        std::size_t num_frames = this->clip.get()->frames.size();
+        this->loop = this->clip.get()->loop;
+        this->num_frames = this->clip.get()->frames.size();
     }
 
     // Playback control.
     void Animator::play()
     {
         this->current_frame = 0;
-        this->current_duration = 0;
+        this->current_duration = this->get_clip()->frames.at(0).duration_ms;
         this->elapsed_ms = 0;
 
         this->playing = true;
         this->paused = false;
         this->finished = false;
+
+        apply();
     }
     void Animator::pause()
     {
@@ -70,30 +72,29 @@ namespace ARES_Engine
         if (this->elapsed_ms >= this->current_duration) // Next frame
         {
             this->elapsed_ms = 0;
-            this->current_frame++;
-            
-            if (this->loop == true && this->current_frame == this->num_frames)
+
+            printf("num frames %d cur frame %d\n", this->num_frames, this->current_frame);
+
+            if (this->current_frame == this->num_frames - 1)
             {
-                this->current_frame = 0;
-                this->current_duration = this->get_clip()->frames.at(current_frame).duration_ms;
-                apply();
-                // Forever
-                return;
-            }
-            else if (this->current_frame == this->num_frames)
-            {
-                // We done
-                this->finished = true;
-                this->playing = false;
-                return;
+                if (this->loop == true)
+                {
+                    this->current_frame = 0;
+                }
+                else
+                {
+                    this->finished = true;
+                    this->playing = false;
+                }
             }
             else
             {
-                this->current_duration = this->get_clip()->frames.at(current_frame).duration_ms;
-                apply();
-                // In between frame
-                return;
+                this->current_frame++;
             }
+
+            this->current_duration = this->get_clip()->frames.at(current_frame).duration_ms;
+
+            apply();
         }
     }
 
@@ -117,6 +118,9 @@ namespace ARES_Engine
             ARES_Engine::Sprite::Scale scale = clp->frames.at(current_frame).parts.at(i).scale;
             ARES_Engine::Sprite::Size size = clp->frames.at(current_frame).parts.at(i).size;
             bool visible = clp->frames.at(current_frame).parts.at(i).visible;
+
+            // printf("Frame %d | sprite %d | visible %d | hw_spr %d | pal: %d\n", id, i, visible, sprites.at(i).get_hw_id(), pal);
+            // printf("XY: %d %d\n", this->sprites.at(i).get_position().x, this->sprites.at(i).get_position().y);
 
             this->sprites.at(i).set_position(offset + this->pos);
             sprites.at(i).set_flip(flip_x, flip_y);

@@ -18,7 +18,7 @@ namespace ARES_Engine
     public:
         Resource_library()
         {
-            if(exists == true)
+            if (exists == true)
                 throw std::runtime_error("Object of class Resource_library alredy exists");
             exists = true;
         }
@@ -77,7 +77,7 @@ namespace ARES_Engine
         Collection<Tilemap_asset> tilemaps;
         Collection<Bitmap_asset> bitmaps;
 
-        private:
-            inline static bool exists = false;
+    private:
+        inline static bool exists = false;
     };
 }

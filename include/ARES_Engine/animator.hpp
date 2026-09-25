@@ -19,21 +19,31 @@ namespace ARES_Engine
     public:
         Animator(int used_sprites = 1)
         {
-            if (used_sprites < 0 || used_sprites > ANIMATOR_MAX_USED_SPRITES)
-                throw std::invalid_argument("Argument used_sprites must be greater or equal to zero and less than " + ANIMATOR_MAX_USED_SPRITES);
+            if (used_sprites < 0 ||
+                used_sprites > ANIMATOR_MAX_USED_SPRITES)
+            {
+                throw std::invalid_argument(
+                    "Argument used_sprites must be between 0 and " +
+                    std::to_string(ANIMATOR_MAX_USED_SPRITES));
+            }
 
-            sprites = {};
+            // Initialize position
+            pos = Vector2i(0, 0);
+
+            // Reserve memory for all requested sprites
+            sprites.reserve(used_sprites);
+
+            // Allocate hardware sprites
             for (int i = 0; i < used_sprites; i++)
             {
-                sprites.push_back(Sprite());
+                sprites.emplace_back();
             }
 
-            for (auto sprite : sprites)
+            // Update hardware sprite visibility
+            for (auto &sprite : sprites)
             {
-                sprite.update(); // Update their vivsibility
+                sprite.update();
             }
-
-            this->pos = Vector2i(0, 0);
         }
 
         // Set/change the animation clip.
@@ -57,6 +67,16 @@ namespace ARES_Engine
         bool is_paused() const;
         bool is_finished() const;
 
+        void set_pos(Vector2i pos)
+        {
+            this->pos = pos;
+        }
+
+        Vector2i get_pos()
+        {
+            return pos;
+        }
+
         std::size_t get_frame_index() const;
 
         std::shared_ptr<const Animation_clip> get_clip() const;
@@ -67,12 +87,12 @@ namespace ARES_Engine
 
         std::size_t current_frame = 0;
         std::size_t current_duration = 0;
-        std::uint32_t elapsed_ms = 0;
+        std::uint64_t elapsed_ms = 0;
 
         bool loop = false;
         std::size_t num_frames = 0;
 
-        Vector2i pos;
+        Vector2i pos = {};
 
         bool playing = false;
         bool paused = false;
