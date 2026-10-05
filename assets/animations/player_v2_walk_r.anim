@@ -1,0 +1,159 @@
+{
+    "frames": [
+        {
+            "duration_ms": 200,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "playerV2",
+                        "frame": 0
+                    },
+                    "offset": [
+                        0,
+                        0
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "playerV2",
+                        "frame": 6
+                    },
+                    "offset": [
+                        -1,
+                        -21
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        },
+        {
+            "duration_ms": 200,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "playerV2",
+                        "frame": 1
+                    },
+                    "offset": [
+                        0,
+                        0
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "playerV2",
+                        "frame": 6
+                    },
+                    "offset": [
+                        -1,
+                        -22
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        },
+        {
+            "duration_ms": 200,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "playerV2",
+                        "frame": 2
+                    },
+                    "offset": [
+                        0,
+                        0
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "playerV2",
+                        "frame": 6
+                    },
+                    "offset": [
+                        -1,
+                        -21
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        },
+        {
+            "duration_ms": 200,
+            "parts": [
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "playerV2",
+                        "frame": 3
+                    },
+                    "offset": [
+                        0,
+                        0
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                },
+                {
+                    "flip_x": false,
+                    "flip_y": false,
+                    "image": {
+                        "asset": "playerV2",
+                        "frame": 6
+                    },
+                    "offset": [
+                        -1,
+                        -22
+                    ],
+                    "palette": "Pal_0",
+                    "scale": "x1",
+                    "size": "x32",
+                    "visible": true
+                }
+            ]
+        }
+    ],
+    "loop": true,
+    "name": "untitled",
+    "schema_version": 1,
+    "slots": [
+        "body",
+        "head"
+    ]
+}

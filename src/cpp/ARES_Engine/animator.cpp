@@ -73,7 +73,6 @@ namespace ARES_Engine
         {
             this->elapsed_ms = 0;
 
-            printf("num frames %d cur frame %d\n", this->num_frames, this->current_frame);
 
             if (this->current_frame == this->num_frames - 1)
             {

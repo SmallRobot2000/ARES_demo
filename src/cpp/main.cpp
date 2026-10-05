@@ -26,6 +26,7 @@ inline std::uint64_t get_ticks_ms()
         .count();
 }
 
+std::uint64_t timel;
 // Math ඞ
 // Color ඞ
 // Bitmap ඞ
@@ -43,6 +44,7 @@ using namespace ARES_Engine;
 Sprite *spr;
 Sprite *spr_1;
 Animator *anim_0;
+Resource_library rl;
 void start(int argc, char **argv)
 {
 
@@ -66,55 +68,123 @@ void start(int argc, char **argv)
 
     Engine::load_bitmap_data("assets/b0/bitmap1.b0", Vector2i(0, 0));
 
-    Resource_library rl;
     // rl.sprite_graphics.add("player", )
-    auto spr_grp = std::make_shared<Sprite_graphics>("player", "assets/test/player.spr", "assets/test/player.pal");
-    rl.sprite_graphics.add("player", spr_grp);
 
-    auto clip_0 = std::make_shared<Animation_clip>(Engine::load_animation_clip("assets/animations/player_walk.anim", rl));
-    rl.animations.add("player_walk", clip_0);
+    printf("T1\n");
+    auto spr_grp = std::make_shared<Sprite_graphics>("playerV2", "assets/spr/playerV2.spr", "assets/test/player.pal");
+    rl.sprite_graphics.add("playerV2", spr_grp);
+
+    printf("T2\n");
+    auto clip_0 = std::make_shared<Animation_clip>(Engine::load_animation_clip("assets/animations/player_v2_walk_r.anim", rl));
+    rl.animations.add("player_walk_r", clip_0);
+
+    auto clip_1 = std::make_shared<Animation_clip>(Engine::load_animation_clip("assets/animations/player_v2_idle_r.anim", rl));
+    rl.animations.add("player_idle_r", clip_1);
+
+    auto clip_2 = std::make_shared<Animation_clip>(Engine::load_animation_clip("assets/animations/player_v2_walk_l.anim", rl));
+    rl.animations.add("player_walk_l", clip_2);
+
+    auto clip_3 = std::make_shared<Animation_clip>(Engine::load_animation_clip("assets/animations/player_v2_idle_l.anim", rl));
+    rl.animations.add("player_idle_l", clip_3);
 
     anim_0 = new Animator(2);
-    anim_0->set_clip(rl.animations.get("player_walk"));
+    //    anim_0->set_clip(rl.animations.get("player_walk"));
+    anim_0->set_clip(rl.animations.get("player_idle_r"));
     anim_0->set_pos(Vector2i(100, 100));
     anim_0->play();
 
     Engine::enable_layer(Engine::Layer::Tile0);
     Engine::enable_layer(Engine::Layer::Tile1);
     Engine::enable_layer(Engine::Layer::Sprite);
+
     // while(1);
     //   Engine::free_sprite_data(loaded_frames);
 
     // scener_run_file("assets/scene1.sen");
+    timel = get_ticks_ms();
 }
 
 Vector2i pos = Vector2i(100, 100);
-
+Vector2i vel = Vector2i(100, 100);
+bool face_r = true;
 void loop()
 {
+    uint64_t deltaTime = get_ticks_ms() - timel;
+    timel = get_ticks_ms();
     Input::update(true);
+    vel.x = 0;
+    vel.y = 0;
+
     if (Input::is_key_down(KEY_W))
     {
-        pos.y -= 1;
+        vel.y -= 1;
     }
     if (Input::is_key_down(KEY_A))
     {
-        pos.x -= 1;
+        vel.x -= 1;
+        face_r = false;
     }
     if (Input::is_key_down(KEY_S))
     {
-        pos.y += 1;
+        vel.y += 1;
     }
     if (Input::is_key_down(KEY_D))
     {
-        pos.x += 1;
+        vel.x += 1;
+        face_r = true;
     }
+
+        if (vel.x != 0 || vel.y != 0)
+    {
+        if (face_r)
+        {
+            if (anim_0->get_clip() != rl.animations.get("player_walk_r"))
+            {
+                printf("Set new clip\n");
+                anim_0->set_clip(rl.animations.get("player_walk_r"));
+                anim_0->play();
+            }
+        }
+        else
+        {
+            if (anim_0->get_clip() != rl.animations.get("player_walk_l"))
+            {
+                printf("Set new clip\n");
+                anim_0->set_clip(rl.animations.get("player_walk_l"));
+                anim_0->play();
+            }
+        }
+    }
+    else
+    {
+        if (face_r)
+        {
+
+            if (anim_0->get_clip() != rl.animations.get("player_idle_r"))
+            {
+                printf("Set new clip\n");
+                anim_0->set_clip(rl.animations.get("player_idle_r"));
+                anim_0->play();
+            }
+        }
+        else
+        {
+            if (anim_0->get_clip() != rl.animations.get("player_idle_l"))
+            {
+                printf("Set new clip\n");
+                anim_0->set_clip(rl.animations.get("player_idle_l"));
+                anim_0->play();
+            }
+        }
+    }
+
+    pos += vel;
 
     pos.x = clamp((int)pos.x, 0, 1023);
     pos.y = clamp((int)pos.y, 0, 1023);
 
     anim_0->set_pos(pos);
-    anim_0->update(16);
+    anim_0->update(deltaTime);
     anim_0->apply();
 
     auto color = Bitmap::Color::Blue;

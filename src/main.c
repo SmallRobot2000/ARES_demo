@@ -6,6 +6,7 @@
 #include <vdp.h>
 // Bok
 #include <app.h>
+#include <vdp_api.h>
 
 int main(int argc, char **argv)
 {
@@ -24,6 +25,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    vdp_b0_disable_linux_mode();
     start(argc, argv);
     while (1)
     {

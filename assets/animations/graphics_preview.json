@@ -1,16 +1,16 @@
 {
     "assets": {
-        "player": {
+        "playerV2": {
             "format": "ares-spr",
             "images": 16,
             "layout": "compact",
             "palette_entries": 256,
             "side": 32,
-            "source": "sprites/bdbb47f8-0c16-4879-902f-40c031a006d0.spr"
+            "source": "sprites/0e998857-2e17-49a9-9859-d449a09ea1a0.spr"
         }
     },
     "palette_banks": [
-        "player",
+        "playerV2",
         null,
         null,
         null
